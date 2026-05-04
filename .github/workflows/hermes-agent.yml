@@ -1,0 +1,167 @@
+name: Hermes Agent Runner
+on:
+  workflow_dispatch:
+    inputs:
+      query:
+        description: 'The task or query for Hermes'
+        required: false
+      run_gateway:
+        description: 'Run as Gateway (Feishu/Telegram)'
+        type: boolean
+        default: false
+      run_webui:
+        description: 'Start Hermes WebUI with Cloudflare Tunnel'
+        type: boolean
+        default: false
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Hermes Agent
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Restore Data from Repository
+        run: |
+          mkdir -p ~/.hermes
+          if [ -d ".hermes-data" ]; then
+            cp -r .hermes-data/* ~/.hermes/ || true
+          fi
+
+      - name: Configure Hermes
+        env:
+          CUSTOM_API_KEY: ${{ secrets.CUSTOM_API_KEY }}
+          FEISHU_APP_ID: ${{ secrets.FEISHU_APP_ID }}
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_ALLOWED_USER: ${{ secrets.TELEGRAM_ALLOWED_USER }}
+        run: |
+          mkdir -p ~/.hermes
+          cat <<EOF > ~/.hermes/config.yaml
+          model:
+            default: gemini-3-flash
+            provider: openclaw
+          
+          custom_providers:
+            - name: openclaw
+              base_url: https://openclaw.994938.xyz/v1
+              api_key: "${CUSTOM_API_KEY}"
+          
+          gateway:
+            allow_all_users: true
+            pairing_enabled: false
+            platforms:
+              feishu:
+                enabled: ${FEISHU_APP_ID:+true}
+                app_id: "${FEISHU_APP_ID}"
+                app_secret: "${FEISHU_APP_SECRET}"
+              telegram:
+                enabled: ${TELEGRAM_BOT_TOKEN:+true}
+                token: "${TELEGRAM_BOT_TOKEN}"
+                allowed_users: ["${TELEGRAM_ALLOWED_USER}"]
+          
+          security:
+            pairing_enabled: false
+          
+          approvals:
+            mode: off
+          
+          terminal:
+            backend: local
+          EOF
+          
+          cat <<EOF > ~/.hermes/.env
+          OPENCLAW_API_KEY=${CUSTOM_API_KEY}
+          FEISHU_ENABLED=${FEISHU_APP_ID:+true}
+          FEISHU_APP_ID=${FEISHU_APP_ID}
+          FEISHU_APP_SECRET=${FEISHU_APP_SECRET}
+          TELEGRAM_ENABLED=${TELEGRAM_BOT_TOKEN:+true}
+          TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+          TELEGRAM_ALLOWED_USERS=${TELEGRAM_ALLOWED_USER}
+          GATEWAY_ALLOW_ALL_USERS=true
+          HERMES_PAIRING_ENABLED=false
+          EOF
+
+      - name: Start Background Auto-Sync
+        run: |
+          cat <<'EOF' > sync.sh
+          while true; do
+            sleep 600
+            mkdir -p .hermes-data
+            cp -r ~/.hermes/sessions .hermes-data/ || true
+            cp -r ~/.hermes/memory .hermes-data/ || true
+            cp -r ~/.hermes/skills .hermes-data/ || true
+            git config --global user.name "hermes-agent[bot]"
+            git config --global user.email "hermes-agent[bot]@users.noreply.github.com"
+            git add .hermes-data
+            if ! git diff --cached --quiet; then
+              git commit -m "chore: auto-sync hermes data [skip ci]"
+              git push origin main || echo "Push failed"
+            fi
+          done
+          EOF
+          chmod +x sync.sh
+          ./sync.sh &
+
+      - name: Setup and Run Hermes WebUI
+        if: github.event.inputs.run_webui == 'true'
+        run: |
+          # Install WebUI
+          git clone --depth 1 https://github.com/nesquena/hermes-webui ~/hermes-webui
+          cd ~/hermes-webui
+          pip install -r requirements.txt
+          
+          # Install Cloudflared
+          curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared.deb
+          
+          # Start WebUI (Default port 8787)
+          export HERMES_WEBUI_PORT=8787
+          python3 server.py &
+          
+          # Start Cloudflare Tunnel (Pointing to 8787)
+          cloudflared tunnel --url http://localhost:8787 &
+          sleep 15
+
+      - name: Run Hermes Agent
+        run: |
+          if [ "${{ github.event.inputs.run_gateway }}" == "true" ]; then
+            hermes gateway run
+          elif [ "${{ github.event.inputs.run_webui }}" == "true" ]; then
+            # Keep alive for 6 hours
+            echo "WebUI is running on port 8787. Action will remain active."
+            sleep 21600
+          elif [ "${{ github.event.inputs.query }}" != "" ]; then
+            hermes chat -q "${{ github.event.inputs.query }}"
+          else
+            hermes doctor
+          fi
+
+      - name: Final Data Sync
+        if: always()
+        run: |
+          mkdir -p .hermes-data
+          cp -r ~/.hermes/sessions .hermes-data/ || true
+          cp -r ~/.hermes/memory .hermes-data/ || true
+          cp -r ~/.hermes/skills .hermes-data/ || true
+          git config --global user.name "hermes-agent[bot]"
+          git config --global user.email "hermes-agent[bot]@users.noreply.github.com"
+          git add .hermes-data
+          git commit -m "docs: archive final hermes session results" || echo "No changes to commit"
+          git push origin main || echo "Final push failed"
