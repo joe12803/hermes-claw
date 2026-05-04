@@ -1,0 +1,24 @@
+# Secrets
+.env
+config.yaml
+auth.json
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.pytest_cache/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Hermes Local Data (We only want the synced .hermes-data)
+/sessions/
+/memory/
+/skills/
+/logs/
+/auth/
+/checkpoints/

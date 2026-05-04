@@ -1,0 +1,18 @@
+# Rules for Hermes-Claw Brain
+
+You are assisting Xiao Bian, an AI Infrastructure & Mining Expert.
+
+## Context Awareness
+- This repository is the **Long-Term Memory** of a Hermes Agent.
+- Always check `.hermes-data/memory/` to understand user preferences before answering.
+- Refer to `.hermes-data/sessions/` for past project history.
+
+## Development Style
+- Prefer FOSS (Free and Open Source Software).
+- Use autonomous execution patterns.
+- For technical reports, use **Chinese**.
+- Follow the **6-stage mining workflow** established in past sessions.
+
+## File Operations
+- Never overwrite critical memory files without confirmation.
+- When creating new skills, follow the `SKILL.md` format.
