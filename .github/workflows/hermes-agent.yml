@@ -5,6 +5,14 @@ on:
       query:
         description: 'The task or query for Hermes'
         required: false
+      model_id:
+        description: 'Model ID to use'
+        required: true
+        default: 'gemini-3-flash'
+      api_base:
+        description: 'API Base URL'
+        required: true
+        default: 'https://openclaw.994938.xyz/v1'
       run_gateway:
         description: 'Run as Gateway (Feishu/Telegram)'
         type: boolean
@@ -54,16 +62,18 @@ jobs:
           FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_ALLOWED_USER: ${{ secrets.TELEGRAM_ALLOWED_USER }}
+          MODEL_ID: ${{ github.event.inputs.model_id || 'gemini-3-flash' }}
+          API_BASE: ${{ github.event.inputs.api_base || 'https://openclaw.994938.xyz/v1' }}
         run: |
           mkdir -p ~/.hermes
           cat <<EOF > ~/.hermes/config.yaml
           model:
-            default: gemini-3-flash
-            provider: openclaw
+            default: ${MODEL_ID}
+            provider: custom-provider
           
           custom_providers:
-            - name: openclaw
-              base_url: https://openclaw.994938.xyz/v1
+            - name: custom-provider
+              base_url: ${API_BASE}
               api_key: "${CUSTOM_API_KEY}"
           
           gateway:
@@ -90,7 +100,7 @@ jobs:
           EOF
           
           cat <<EOF > ~/.hermes/.env
-          OPENCLAW_API_KEY=${CUSTOM_API_KEY}
+          CUSTOM_PROVIDER_API_KEY=${CUSTOM_API_KEY}
           FEISHU_ENABLED=${{ secrets.FEISHU_APP_ID != '' }}
           FEISHU_APP_ID=${FEISHU_APP_ID}
           FEISHU_APP_SECRET=${FEISHU_APP_SECRET}
@@ -139,7 +149,6 @@ jobs:
           
           cloudflared tunnel --url http://localhost:8787 > cloudflared.log 2>&1 &
           
-          # Wait for the URL to appear in logs
           MAX_RETRIES=20
           COUNT=0
           TUNNEL_URL=""
@@ -154,16 +163,12 @@ jobs:
           
           if [ -n "$TUNNEL_URL" ]; then
             echo "TUNNEL_URL=$TUNNEL_URL" >> $GITHUB_ENV
-            echo "Detected Tunnel URL: $TUNNEL_URL"
-          else
-            echo "Failed to detect Cloudflare Tunnel URL"
           fi
 
       - name: Notify Deployment via Agent
         if: github.event.inputs.run_webui == 'true' && env.TUNNEL_URL != ''
         run: |
-          # Use Hermes Agent to send the notification to the user's home channels
-          hermes chat -q "🚀 Hermes WebUI 部署成功！\n🔗 访问地址: ${{ env.TUNNEL_URL }}\n⏳ 持续时间: 6小时\n请立即使用 send_message 工具将此信息同步到我的飞书和电报。" || true
+          hermes chat -q "🚀 Hermes WebUI 部署成功！\n🔗 访问地址: ${{ env.TUNNEL_URL }}\n🤖 当前模型: ${{ github.event.inputs.model_id }}\n请立即使用 send_message 工具将此信息同步到我的飞书和电报。" || true
 
       - name: Run Hermes Agent
         run: |
