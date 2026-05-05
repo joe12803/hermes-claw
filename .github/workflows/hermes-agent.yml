@@ -60,8 +60,10 @@ jobs:
           CUSTOM_API_KEY: ${{ secrets.CUSTOM_API_KEY }}
           FEISHU_APP_ID: ${{ secrets.FEISHU_APP_ID }}
           FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          FEISHU_CHAT_ID: ${{ secrets.FEISHU_CHAT_ID }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_ALLOWED_USER: ${{ secrets.TELEGRAM_ALLOWED_USER }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           MODEL_ID: ${{ github.event.inputs.model_id || 'gemini-3-flash' }}
           API_BASE: ${{ github.event.inputs.api_base || 'https://openclaw.994938.xyz/v1' }}
         run: |
@@ -84,10 +86,16 @@ jobs:
                 enabled: ${{ secrets.FEISHU_APP_ID != '' }}
                 app_id: "${FEISHU_APP_ID}"
                 app_secret: "${FEISHU_APP_SECRET}"
+                home_channel:
+                  platform: feishu
+                  chat_id: "${FEISHU_CHAT_ID}"
               telegram:
                 enabled: ${{ secrets.TELEGRAM_BOT_TOKEN != '' }}
                 token: "${TELEGRAM_BOT_TOKEN}"
                 allowed_users: ["${TELEGRAM_ALLOWED_USER}"]
+                home_channel:
+                  platform: telegram
+                  chat_id: "${TELEGRAM_CHAT_ID:-$TELEGRAM_ALLOWED_USER}"
           
           security:
             pairing_enabled: false
@@ -104,9 +112,11 @@ jobs:
           FEISHU_ENABLED=${{ secrets.FEISHU_APP_ID != '' }}
           FEISHU_APP_ID=${FEISHU_APP_ID}
           FEISHU_APP_SECRET=${FEISHU_APP_SECRET}
+          FEISHU_CHAT_ID=${FEISHU_CHAT_ID}
           TELEGRAM_ENABLED=${{ secrets.TELEGRAM_BOT_TOKEN != '' }}
           TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
           TELEGRAM_ALLOWED_USERS=${TELEGRAM_ALLOWED_USER}
+          TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
           GATEWAY_ALLOW_ALL_USERS=true
           HERMES_PAIRING_ENABLED=false
           EOF
@@ -168,7 +178,8 @@ jobs:
       - name: Notify Deployment via Agent
         if: github.event.inputs.run_webui == 'true' && env.TUNNEL_URL != ''
         run: |
-          hermes chat -q "🚀 Hermes WebUI 部署成功！\n🔗 访问地址: ${{ env.TUNNEL_URL }}\n🤖 当前模型: ${{ github.event.inputs.model_id }}\n请立即使用 send_message 工具将此信息同步到我的飞书和电报。" || true
+          # 显式告知 Agent 发送消息
+          hermes chat -q "🚀 Hermes WebUI 部署成功！\n🔗 访问地址: ${{ env.TUNNEL_URL }}\n🤖 当前模型: ${{ github.event.inputs.model_id }}\n请将此消息发送到我的飞书和电报主频道。" || true
 
       - name: Run Hermes Agent
         run: |
