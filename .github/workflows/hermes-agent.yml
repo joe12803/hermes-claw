@@ -30,11 +30,10 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11' # Updated to 3.11 as required by hermes-agent
 
       - name: Install Hermes Agent
         run: |
-          # 克隆源码安装以确保 sys.path 正确
           git clone --depth 1 https://github.com/NousResearch/hermes-agent.git ~/hermes-agent-src
           cd ~/hermes-agent-src
           pip install -e .
@@ -125,21 +124,17 @@ jobs:
       - name: Setup and Run Hermes WebUI
         if: github.event.inputs.run_webui == 'true'
         run: |
-          # 安装 WebUI
           git clone --depth 1 https://github.com/nesquena/hermes-webui ~/hermes-webui
           cd ~/hermes-webui
           pip install -r requirements.txt
           
-          # 安装 Cloudflared
           curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared.deb
           
-          # 启动 WebUI (确保 hermes-agent 在 sys.path 中)
           export HERMES_WEBUI_PORT=8787
           export PYTHONPATH=$PYTHONPATH:~/hermes-agent-src
           python3 server.py &
           
-          # 启动 Cloudflare Tunnel
           cloudflared tunnel --url http://localhost:8787 &
           sleep 15
 
