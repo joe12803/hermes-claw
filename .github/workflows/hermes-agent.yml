@@ -36,9 +36,8 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/NousResearch/hermes-agent.git ~/hermes-agent-src
           cd ~/hermes-agent-src
-          # 安装核心包及所有平台依赖
           pip install -e .
-          pip install lark-oapi python-telegram-bot  # 显式安装网关依赖
+          pip install lark-oapi python-telegram-bot requests
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Restore Data from Repository
@@ -134,13 +133,37 @@ jobs:
           sudo dpkg -i cloudflared.deb
           
           export HERMES_WEBUI_PORT=8787
-          # 显式指定 Agent 目录
           export HERMES_WEBUI_AGENT_DIR=/home/runner/hermes-agent-src
           export PYTHONPATH=$PYTHONPATH:/home/runner/hermes-agent-src
-          python3 server.py &
+          python3 server.py > webui.log 2>&1 &
           
-          cloudflared tunnel --url http://localhost:8787 &
-          sleep 15
+          cloudflared tunnel --url http://localhost:8787 > cloudflared.log 2>&1 &
+          
+          # Wait for the URL to appear in logs
+          MAX_RETRIES=20
+          COUNT=0
+          TUNNEL_URL=""
+          while [ $COUNT -lt $MAX_RETRIES ]; do
+            TUNNEL_URL=$(grep -oE 'https://[a-zA-Z0-9.-]+\.trycloudflare\.com' cloudflared.log | head -n 1)
+            if [ -n "$TUNNEL_URL" ]; then
+              break
+            fi
+            sleep 3
+            COUNT=$((COUNT+1))
+          done
+          
+          if [ -n "$TUNNEL_URL" ]; then
+            echo "TUNNEL_URL=$TUNNEL_URL" >> $GITHUB_ENV
+            echo "Detected Tunnel URL: $TUNNEL_URL"
+          else
+            echo "Failed to detect Cloudflare Tunnel URL"
+          fi
+
+      - name: Notify Deployment via Agent
+        if: github.event.inputs.run_webui == 'true' && env.TUNNEL_URL != ''
+        run: |
+          # Use Hermes Agent to send the notification to the user's home channels
+          hermes chat -q "🚀 Hermes WebUI 部署成功！\n🔗 访问地址: ${{ env.TUNNEL_URL }}\n⏳ 持续时间: 6小时\n请立即使用 send_message 工具将此信息同步到我的飞书和电报。" || true
 
       - name: Run Hermes Agent
         run: |
