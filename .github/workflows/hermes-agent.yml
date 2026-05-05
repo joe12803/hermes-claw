@@ -30,13 +30,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11' # Updated to 3.11 as required by hermes-agent
+          python-version: '3.11'
 
-      - name: Install Hermes Agent
+      - name: Install Hermes Agent and Dependencies
         run: |
           git clone --depth 1 https://github.com/NousResearch/hermes-agent.git ~/hermes-agent-src
           cd ~/hermes-agent-src
+          # 安装核心包及所有平台依赖
           pip install -e .
+          pip install lark-oapi python-telegram-bot  # 显式安装网关依赖
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Restore Data from Repository
@@ -132,7 +134,9 @@ jobs:
           sudo dpkg -i cloudflared.deb
           
           export HERMES_WEBUI_PORT=8787
-          export PYTHONPATH=$PYTHONPATH:~/hermes-agent-src
+          # 显式指定 Agent 目录
+          export HERMES_WEBUI_AGENT_DIR=/home/runner/hermes-agent-src
+          export PYTHONPATH=$PYTHONPATH:/home/runner/hermes-agent-src
           python3 server.py &
           
           cloudflared tunnel --url http://localhost:8787 &
