@@ -44,7 +44,7 @@ jobs:
             cp -r .hermes-data/* ~/.hermes/ || true
           fi
 
-- name: Configure Hermes
+      - name: Configure Hermes
         env:
           CUSTOM_API_KEY: ${{ secrets.CUSTOM_API_KEY }}
           FEISHU_APP_ID: ${{ secrets.FEISHU_APP_ID }}
@@ -92,49 +92,6 @@ jobs:
           FEISHU_APP_ID=${FEISHU_APP_ID}
           FEISHU_APP_SECRET=${FEISHU_APP_SECRET}
           TELEGRAM_ENABLED=${{ secrets.TELEGRAM_BOT_TOKEN != '' }}
-          TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-          TELEGRAM_ALLOWED_USERS=${TELEGRAM_ALLOWED_USER}
-          GATEWAY_ALLOW_ALL_USERS=true
-          HERMES_PAIRING_ENABLED=false
-          EOF > ~/.hermes/config.yaml
-          model:
-            default: gemini-3-flash
-            provider: openclaw
-          
-          custom_providers:
-            - name: openclaw
-              base_url: https://openclaw.994938.xyz/v1
-              api_key: "${CUSTOM_API_KEY}"
-          
-          gateway:
-            allow_all_users: true
-            pairing_enabled: false
-            platforms:
-              feishu:
-                enabled: ${FEISHU_APP_ID:+true}
-                app_id: "${FEISHU_APP_ID}"
-                app_secret: "${FEISHU_APP_SECRET}"
-              telegram:
-                enabled: ${TELEGRAM_BOT_TOKEN:+true}
-                token: "${TELEGRAM_BOT_TOKEN}"
-                allowed_users: ["${TELEGRAM_ALLOWED_USER}"]
-          
-          security:
-            pairing_enabled: false
-          
-          approvals:
-            mode: off
-          
-          terminal:
-            backend: local
-          EOF
-          
-          cat <<EOF > ~/.hermes/.env
-          OPENCLAW_API_KEY=${CUSTOM_API_KEY}
-          FEISHU_ENABLED=${FEISHU_APP_ID:+true}
-          FEISHU_APP_ID=${FEISHU_APP_ID}
-          FEISHU_APP_SECRET=${FEISHU_APP_SECRET}
-          TELEGRAM_ENABLED=${TELEGRAM_BOT_TOKEN:+true}
           TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
           TELEGRAM_ALLOWED_USERS=${TELEGRAM_ALLOWED_USER}
           GATEWAY_ALLOW_ALL_USERS=true
