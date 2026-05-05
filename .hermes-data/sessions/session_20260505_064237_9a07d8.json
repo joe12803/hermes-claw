@@ -1,0 +1,1572 @@
+{
+  "session_id": "20260505_064237_9a07d8",
+  "model": "gemini-3-flash",
+  "base_url": "https://openclaw.994938.xyz/v1",
+  "platform": "cli",
+  "session_start": "2026-05-05T06:42:40.334422",
+  "last_updated": "2026-05-05T06:44:56.734212",
+  "system_prompt": "You are Hermes Agent, an intelligent AI assistant created by Nous Research. You are helpful, knowledgeable, and direct. You assist users with a wide range of tasks including answering questions, writing and editing code, analyzing information, creative work, and executing actions via your tools. You communicate clearly, admit uncertainty when appropriate, and prioritize being genuinely useful over being verbose unless otherwise directed below. Be targeted and efficient in your exploration and investigations.\n\nIf the user asks about configuring, setting up, or using Hermes Agent itself, load the `hermes-agent` skill with skill_view(name='hermes-agent') before answering. Docs: https://hermes-agent.nousresearch.com/docs\n\nYou have persistent memory across sessions. Save durable facts using the memory tool: user preferences, environment details, tool quirks, and stable conventions. Memory is injected into every turn, so keep it compact and focused on facts that will still matter later.\nPrioritize what reduces future user steering — the most valuable memory is one that prevents the user from having to correct or remind you again. User preferences and recurring corrections matter more than procedural task details.\nDo NOT save task progress, session outcomes, completed-work logs, or temporary TODO state to memory; use session_search to recall those from past transcripts. If you've discovered a new way to do something, solved a problem that could be necessary later, save it as a skill with the skill tool.\nWrite memories as declarative facts, not instructions to yourself. 'User prefers concise responses' ✓ — 'Always respond concisely' ✗. 'Project uses pytest with xdist' ✓ — 'Run tests with pytest -n 4' ✗. Imperative phrasing gets re-read as a directive in later sessions and can cause repeated work or override the user's current request. Procedures and workflows belong in skills, not memory. When the user references something from a past conversation or you suspect relevant cross-session context exists, use session_search to recall it before asking them to repeat themselves. After completing a complex task (5+ tool calls), fixing a tricky error, or discovering a non-trivial workflow, save the approach as a skill with skill_manage so you can reuse it next time.\nWhen using a skill and finding it outdated, incomplete, or wrong, patch it immediately with skill_manage(action='patch') — don't wait to be asked. Skills that aren't maintained become liabilities.\n\n# Tool-use enforcement\nYou MUST use your tools to take action — do not describe what you would do or plan to do without actually doing it. When you say you will perform an action (e.g. 'I will run the tests', 'Let me check the file', 'I will create the project'), you MUST immediately make the corresponding tool call in the same response. Never end your turn with a promise of future action — execute it now.\nKeep working until the task is actually complete. Do not stop with a summary of what you plan to do next time. If you have tools available that can accomplish the task, use them instead of telling the user what you would do.\nEvery response should either (a) contain tool calls that make progress, or (b) deliver a final result to the user. Responses that only describe intentions without acting are not acceptable.\n\n# Google model operational directives\nFollow these operational rules strictly:\n- **Absolute paths:** Always construct and use absolute file paths for all file system operations. Combine the project root with relative paths.\n- **Verify first:** Use read_file/search_files to check file contents and project structure before making changes. Never guess at file contents.\n- **Dependency checks:** Never assume a library is available. Check package.json, requirements.txt, Cargo.toml, etc. before importing.\n- **Conciseness:** Keep explanatory text brief — a few sentences, not paragraphs. Focus on actions and results over narration.\n- **Parallel tool calls:** When you need to perform multiple independent operations (e.g. reading several files), make all the tool calls in a single response rather than sequentially.\n- **Non-interactive commands:** Use flags like -y, --yes, --non-interactive to prevent CLI tools from hanging on prompts.\n- **Keep going:** Work autonomously until the task is fully resolved. Don't stop with a plan — execute it.\n\n## Skills (mandatory)\nBefore replying, scan the skills below. If a skill matches or is even partially relevant to your task, you MUST load it with skill_view(name) and follow its instructions. Err on the side of loading — it is always better to have context you don't need than to miss critical steps, pitfalls, or established workflows. Skills contain specialized knowledge — API endpoints, tool-specific commands, and proven workflows that outperform general-purpose approaches. Load the skill even if you think you could handle the task with basic tools like web_search or terminal. Skills also encode the user's preferred approach, conventions, and quality standards for tasks like code review, planning, and testing — load them even for tasks you already know how to do, because the skill defines how it should be done here.\nWhenever the user asks you to configure, set up, install, enable, disable, modify, or troubleshoot Hermes Agent itself — its CLI, config, models, providers, tools, skills, voice, gateway, plugins, or any feature — load the `hermes-agent` skill first. It has the actual commands (e.g. `hermes config set …`, `hermes tools`, `hermes setup`) so you don't have to guess or invent workarounds.\nIf a skill has issues, fix it with skill_manage(action='patch').\nAfter difficult/iterative tasks, offer to save as a skill. If a skill you loaded was missing steps, had wrong commands, or needed pitfalls you discovered, update it before finishing.\n\n<available_skills>\n  autonomous-ai-agents: Skills for spawning and orchestrating autonomous AI coding agents and multi-agent workflows — running independent agent processes, delegating tasks, and coordinating parallel workstreams.\n    - claude-code: Delegate coding to Claude Code CLI (features, PRs).\n    - codex: Delegate coding to OpenAI Codex CLI (features, PRs).\n    - hermes-agent: Configure, extend, or contribute to Hermes Agent.\n    - opencode: Delegate coding to OpenCode CLI (features, PR review).\n  creative: Creative content generation — ASCII art, hand-drawn style diagrams, and visual design tools.\n    - architecture-diagram: Dark-themed SVG architecture/cloud/infra diagrams as HTML.\n    - ascii-art: ASCII art: pyfiglet, cowsay, boxes, image-to-ascii.\n    - ascii-video: ASCII video: convert video/audio to colored ASCII MP4/GIF.\n    - baoyu-comic: Knowledge comics (知识漫画): educational, biography, tutorial.\n    - baoyu-infographic: Infographics: 21 layouts x 21 styles (信息图, 可视化).\n    - claude-design: Design one-off HTML artifacts (landing, deck, prototype).\n    - comfyui: Generate images, video, and audio with ComfyUI — install,...\n    - design-md: Author/validate/export Google's DESIGN.md token spec files.\n    - excalidraw: Hand-drawn Excalidraw JSON diagrams (arch, flow, seq).\n    - humanizer: Humanize text: strip AI-isms and add real voice.\n    - ideation: Generate project ideas via creative constraints.\n    - manim-video: Manim CE animations: 3Blue1Brown math/algo videos.\n    - p5js: p5.js sketches: gen art, shaders, interactive, 3D.\n    - pixel-art: Pixel art w/ era palettes (NES, Game Boy, PICO-8).\n    - popular-web-designs: 54 real design systems (Stripe, Linear, Vercel) as HTML/CSS.\n    - pretext: Use when building creative browser demos with @chenglou/p...\n    - sketch: Throwaway HTML mockups: 2-3 design variants to compare.\n    - songwriting-and-ai-music: Songwriting craft and Suno AI music prompts.\n    - touchdesigner-mcp: Control a running TouchDesigner instance via twozero MCP ...\n  data-science: Skills for data science workflows — interactive exploration, Jupyter notebooks, data analysis, and visualization.\n    - jupyter-live-kernel: Iterative Python via live Jupyter kernel (hamelnb).\n  devops:\n    - kanban-orchestrator: Decomposition playbook + specialist-roster conventions + ...\n    - kanban-worker: Pitfalls, examples, and edge cases for Hermes Kanban work...\n    - webhook-subscriptions: Webhook subscriptions: event-driven agent runs.\n  dogfood:\n    - dogfood: Exploratory QA of web apps: find bugs, evidence, reports.\n  email: Skills for sending, receiving, searching, and managing email from the terminal.\n    - himalaya: Himalaya CLI: IMAP/SMTP email from terminal.\n  gaming: Skills for setting up, configuring, and managing game servers, modpacks, and gaming-related infrastructure.\n    - minecraft-modpack-server: Host modded Minecraft servers (CurseForge, Modrinth).\n    - pokemon-player: Play Pokemon via headless emulator + RAM reads.\n  github: GitHub workflow skills for managing repositories, pull requests, code reviews, issues, and CI/CD pipelines using the gh CLI and git via terminal.\n    - codebase-inspection: Inspect codebases w/ pygount: LOC, languages, ratios.\n    - github-auth: GitHub auth setup: HTTPS tokens, SSH keys, gh CLI login.\n    - github-code-review: Review PRs: diffs, inline comments via gh or REST.\n    - github-issues: Create, triage, label, assign GitHub issues via gh or REST.\n    - github-pr-workflow: GitHub PR lifecycle: branch, commit, open, CI, merge.\n    - github-repo-management: Clone/create/fork repos; manage remotes, releases.\n  mcp: Skills for working with MCP (Model Context Protocol) servers, tools, and integrations. Documents the built-in native MCP client — configure servers in config.yaml for automatic tool discovery.\n    - native-mcp: MCP client: connect servers, register tools (stdio/HTTP).\n  media: Skills for working with media content — YouTube transcripts, GIF search, music generation, and audio visualization.\n    - gif-search: Search/download GIFs from Tenor via curl + jq.\n    - heartmula: HeartMuLa: Suno-like song generation from lyrics + tags.\n    - songsee: Audio spectrograms/features (mel, chroma, MFCC) via CLI.\n    - spotify: Spotify: play, search, queue, manage playlists and devices.\n    - youtube-content: YouTube transcripts to summaries, threads, blogs.\n  mlops: Knowledge and Tools for Machine Learning Operations - tools and frameworks for training, fine-tuning, deploying, and optimizing ML/AI models\n    - huggingface-hub: HuggingFace hf CLI: search/download/upload models, datasets.\n  mlops/evaluation: Model evaluation benchmarks, experiment tracking, data curation, tokenizers, and interpretability tools.\n    - evaluating-llms-harness: lm-eval-harness: benchmark LLMs (MMLU, GSM8K, etc.).\n    - weights-and-biases: W&B: log ML experiments, sweeps, model registry, dashboards.\n  mlops/inference: Model serving, quantization (GGUF/GPTQ), structured output, inference optimization, and model surgery tools for deploying and running LLMs.\n    - llama-cpp: llama.cpp local GGUF inference + HF Hub model discovery.\n    - obliteratus: OBLITERATUS: abliterate LLM refusals (diff-in-means).\n    - outlines: Outlines: structured JSON/regex/Pydantic LLM generation.\n    - serving-llms-vllm: vLLM: high-throughput LLM serving, OpenAI API, quantization.\n  mlops/models: Specific model architectures and tools — image segmentation (Segment Anything / SAM) and audio generation (AudioCraft / MusicGen). Additional model skills (CLIP, Stable Diffusion, Whisper, LLaVA) are available as optional skills.\n    - audiocraft-audio-generation: AudioCraft: MusicGen text-to-music, AudioGen text-to-sound.\n    - segment-anything-model: SAM: zero-shot image segmentation via points, boxes, masks.\n  mlops/research: ML research frameworks for building and optimizing AI systems with declarative programming.\n    - dspy: DSPy: declarative LM programs, auto-optimize prompts, RAG.\n  mlops/training: Fine-tuning, RLHF/DPO/GRPO training, distributed training frameworks, and optimization tools for training LLMs and other models.\n    - axolotl: Axolotl: YAML LLM fine-tuning (LoRA, DPO, GRPO).\n    - fine-tuning-with-trl: TRL: SFT, DPO, PPO, GRPO, reward modeling for LLM RLHF.\n    - unsloth: Unsloth: 2-5x faster LoRA/QLoRA fine-tuning, less VRAM.\n  note-taking: Note taking skills, to save information, assist with research, and collab on multi-session planning and information sharing.\n    - obsidian: Read, search, and create notes in the Obsidian vault.\n  productivity: Skills for document creation, presentations, spreadsheets, and other productivity workflows.\n    - airtable: Airtable REST API via curl. Records CRUD, filters, upserts.\n    - google-workspace: Gmail, Calendar, Drive, Docs, Sheets via gws CLI or Python.\n    - linear: Linear: manage issues, projects, teams via GraphQL + curl.\n    - maps: Geocode, POIs, routes, timezones via OpenStreetMap/OSRM.\n    - nano-pdf: Edit PDF text/typos/titles via nano-pdf CLI (NL prompts).\n    - notion: Notion API via curl: pages, databases, blocks, search.\n    - ocr-and-documents: Extract text from PDFs/scans (pymupdf, marker-pdf).\n    - powerpoint: Create, read, edit .pptx decks, slides, notes, templates.\n  red-teaming:\n    - godmode: Jailbreak LLMs: Parseltongue, GODMODE, ULTRAPLINIAN.\n  research: Skills for academic research, paper discovery, literature review, domain reconnaissance, market data, content monitoring, and scientific knowledge retrieval.\n    - arxiv: Search arXiv papers by keyword, author, category, or ID.\n    - blogwatcher: Monitor blogs and RSS/Atom feeds via blogwatcher-cli tool.\n    - llm-wiki: Karpathy's LLM Wiki: build/query interlinked markdown KB.\n    - polymarket: Query Polymarket: markets, prices, orderbooks, history.\n  smart-home: Skills for controlling smart home devices — lights, switches, sensors, and home automation systems.\n    - openhue: Control Philips Hue lights, scenes, rooms via OpenHue CLI.\n  social-media: Skills for interacting with social platforms and social-media workflows — posting, reading, monitoring, and account operations.\n    - xurl: X/Twitter via xurl CLI: post, search, DM, media, v2 API.\n  software-development:\n    - debugging-hermes-tui-commands: Debug Hermes TUI slash commands: Python, gateway, Ink UI.\n    - hermes-agent-skill-authoring: Author in-repo SKILL.md: frontmatter, validator, structure.\n    - node-inspect-debugger: Debug Node.js via --inspect + Chrome DevTools Protocol CLI.\n    - plan: Plan mode: write markdown plan to .hermes/plans/, no exec.\n    - python-debugpy: Debug Python: pdb REPL + debugpy remote (DAP).\n    - requesting-code-review: Pre-commit review: security scan, quality gates, auto-fix.\n    - spike: Throwaway experiments to validate an idea before build.\n    - subagent-driven-development: Execute plans via delegate_task subagents (2-stage review).\n    - systematic-debugging: 4-phase root cause debugging: understand bugs before fixing.\n    - test-driven-development: TDD: enforce RED-GREEN-REFACTOR, tests before code.\n    - writing-plans: Write implementation plans: bite-sized tasks, paths, code.\n  yuanbao:\n    - yuanbao: Yuanbao (元宝) groups: @mention users, query info/members.\n</available_skills>\n\nOnly proceed without loading a skill if genuinely none are relevant to the task.\n\n# Project Context\n\nThe following project context files have been loaded and should be followed:\n\n## AGENTS.md\n\n# Agent Context & Memory Guide\n\nThis repository serves as the long-term memory for Hermes Agent and Copilot.\n\n## Active Profiles\n- **User**: Xiao Bian\n- **Role**: AI Infrastructure & Mining Expert\n- **Interests**: FOSS, Autonomous Agents, Feishu Automation\n\n## Knowledge Context\nRefer to files in:\n- `/memory`: Stable facts and environment details.\n- `/sessions`: Historical transcripts and logic flows.\n- `/skills`: Reusable procedural knowledge.\n\n## Copilot Instructions\nWhen interacting with this repository, always prioritize the information in `memory/` to maintain consistency with the Hermes Agent's perspective.\n\nConversation started: Tuesday, May 05, 2026 06:42 AM\nModel: gemini-3-flash\nProvider: custom\n\nYou are a CLI AI Agent. Try not to use markdown but simple text renderable inside a terminal. File delivery: there is no attachment channel — the user reads your response directly in their terminal. Do NOT emit MEDIA:/path tags (those are only intercepted on messaging platforms like Telegram, Discord, Slack, etc.; on the CLI they render as literal text). When referring to a file you created or changed, just state its absolute path in plain text; the user can open it from there.",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_back",
+        "description": "Navigate back to the previous page in browser history. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_click",
+        "description": "Click on an element identified by its ref ID from the snapshot (e.g., '@e5'). The ref IDs are shown in square brackets in the snapshot output. Requires browser_navigate and browser_snapshot to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "type": "string",
+              "description": "The element reference from the snapshot (e.g., '@e5', '@e12')"
+            }
+          },
+          "required": [
+            "ref"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_console",
+        "description": "Get browser console output and JavaScript errors from the current page. Returns console.log/warn/error/info messages and uncaught JS exceptions. Use this to detect silent JavaScript errors, failed API calls, and application warnings. Requires browser_navigate to be called first. When 'expression' is provided, evaluates JavaScript in the page context and returns the result — use this for DOM inspection, reading page state, or extracting data programmatically.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "clear": {
+              "type": "boolean",
+              "default": false,
+              "description": "If true, clear the message buffers after reading"
+            },
+            "expression": {
+              "type": "string",
+              "description": "JavaScript expression to evaluate in the page context. Runs in the browser like DevTools console — full access to DOM, window, document. Return values are serialized to JSON. Example: 'document.title' or 'document.querySelectorAll(\"a\").length'"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_get_images",
+        "description": "Get a list of all images on the current page with their URLs and alt text. Useful for finding images to analyze with the vision tool. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_navigate",
+        "description": "Navigate to a URL in the browser. Initializes the session and loads the page. Must be called before other browser tools. For plain-text endpoints — URLs ending in .md, .txt, .json, .yaml, .yml, .csv, .xml, raw.githubusercontent.com, or any documented API endpoint — prefer curl via the terminal tool or web_extract; the browser stack is overkill and much slower for these. Use browser tools when you need to interact with a page (click, fill forms, dynamic content). Returns a compact page snapshot with interactive elements and ref IDs — no need to call browser_snapshot separately after navigating.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The URL to navigate to (e.g., 'https://example.com')"
+            }
+          },
+          "required": [
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_press",
+        "description": "Press a keyboard key. Useful for submitting forms (Enter), navigating (Tab), or keyboard shortcuts. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Key to press (e.g., 'Enter', 'Tab', 'Escape', 'ArrowDown')"
+            }
+          },
+          "required": [
+            "key"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_scroll",
+        "description": "Scroll the page in a direction. Use this to reveal more content that may be below or above the current viewport. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "type": "string",
+              "enum": [
+                "up",
+                "down"
+              ],
+              "description": "Direction to scroll"
+            }
+          },
+          "required": [
+            "direction"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_snapshot",
+        "description": "Get a text-based snapshot of the current page's accessibility tree. Returns interactive elements with ref IDs (like @e1, @e2) for browser_click and browser_type. full=false (default): compact view with interactive elements. full=true: complete page content. Snapshots over 8000 chars are truncated or LLM-summarized. Requires browser_navigate first. Note: browser_navigate already returns a compact snapshot — use this to refresh after interactions that change the page, or with full=true for complete content.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "full": {
+              "type": "boolean",
+              "description": "If true, returns complete page content. If false (default), returns compact view with interactive elements only.",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_type",
+        "description": "Type text into an input field identified by its ref ID. Clears the field first, then types the new text. Requires browser_navigate and browser_snapshot to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "type": "string",
+              "description": "The element reference from the snapshot (e.g., '@e3')"
+            },
+            "text": {
+              "type": "string",
+              "description": "The text to type into the field"
+            }
+          },
+          "required": [
+            "ref",
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "browser_vision",
+        "description": "Take a screenshot of the current page and analyze it with vision AI. Use this when you need to visually understand what's on the page - especially useful for CAPTCHAs, visual verification challenges, complex layouts, or when the text snapshot doesn't capture important visual information. Returns both the AI analysis and a screenshot_path that you can share with the user by including MEDIA:<screenshot_path> in your response. Requires browser_navigate to be called first.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string",
+              "description": "What you want to know about the page visually. Be specific about what you're looking for."
+            },
+            "annotate": {
+              "type": "boolean",
+              "default": false,
+              "description": "If true, overlay numbered [N] labels on interactive elements. Each [N] maps to ref @eN for subsequent browser commands. Useful for QA and spatial reasoning about page layout."
+            }
+          },
+          "required": [
+            "question"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "clarify",
+        "description": "Ask the user a question when you need clarification, feedback, or a decision before proceeding. Supports two modes:\n\n1. **Multiple choice** — provide up to 4 choices. The user picks one or types their own answer via a 5th 'Other' option.\n2. **Open-ended** — omit choices entirely. The user types a free-form response.\n\nUse this tool when:\n- The task is ambiguous and you need the user to choose an approach\n- You want post-task feedback ('How did that work out?')\n- You want to offer to save a skill or update memory\n- A decision has meaningful trade-offs the user should weigh in on\n\nDo NOT use this tool for simple yes/no confirmation of dangerous commands (the terminal tool handles that). Prefer making a reasonable default choice yourself when the decision is low-stakes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string",
+              "description": "The question to present to the user."
+            },
+            "choices": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 4,
+              "description": "Up to 4 answer choices. Omit this parameter entirely to ask an open-ended question. When provided, the UI automatically appends an 'Other (type your answer)' option."
+            }
+          },
+          "required": [
+            "question"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "cronjob",
+        "description": "Manage scheduled cron jobs with a single compressed tool.\n\nUse action='create' to schedule a new job from a prompt or one or more skills.\nUse action='list' to inspect jobs.\nUse action='update', 'pause', 'resume', 'remove', or 'run' to manage an existing job.\n\nTo stop a job the user no longer wants: first action='list' to find the job_id, then action='remove' with that job_id. Never guess job IDs — always list first.\n\nJobs run in a fresh session with no current-chat context, so prompts must be self-contained.\nIf skills are provided on create, the future cron run loads those skills in order, then follows the prompt as the task instruction.\nOn update, passing skills=[] clears attached skills.\n\nNOTE: The agent's final response is auto-delivered to the target. Put the primary\nuser-facing content in the final response. Cron jobs run autonomously with no user\npresent — they cannot ask questions or request clarification.\n\nImportant safety rule: cron-run sessions should not recursively schedule more cron jobs.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "description": "One of: create, list, update, pause, resume, remove, run"
+            },
+            "job_id": {
+              "type": "string",
+              "description": "Required for update/pause/resume/remove/run"
+            },
+            "prompt": {
+              "type": "string",
+              "description": "For create: the full self-contained prompt. If skills are also provided, this becomes the task instruction paired with those skills."
+            },
+            "schedule": {
+              "type": "string",
+              "description": "For create/update: '30m', 'every 2h', '0 9 * * *', or ISO timestamp"
+            },
+            "name": {
+              "type": "string",
+              "description": "Optional human-friendly name"
+            },
+            "repeat": {
+              "type": "integer",
+              "description": "Optional repeat count. Omit for defaults (once for one-shot, forever for recurring)."
+            },
+            "deliver": {
+              "type": "string",
+              "description": "Omit this parameter to auto-deliver back to the current chat and topic (recommended). Auto-detection preserves thread/topic context. Only set explicitly when the user asks to deliver somewhere OTHER than the current conversation. Values: 'origin' (same as omitting), 'local' (no delivery, save only), or platform:chat_id:thread_id for a specific destination. Examples: 'telegram:-1001234567890:17585', 'discord:#engineering', 'sms:+15551234567'. WARNING: 'platform:chat_id' without :thread_id loses topic targeting."
+            },
+            "skills": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional ordered list of skill names to load before executing the cron prompt. On update, pass an empty array to clear attached skills."
+            },
+            "model": {
+              "type": "object",
+              "description": "Optional per-job model override. If provider is omitted, the current main provider is pinned at creation time so the job stays stable.",
+              "properties": {
+                "provider": {
+                  "type": "string",
+                  "description": "Provider name (e.g. 'openrouter', 'anthropic', or 'custom:<name>' for a provider defined in custom_providers config — always include the ':<name>' suffix, never pass the bare 'custom'). Omit to use and pin the current provider."
+                },
+                "model": {
+                  "type": "string",
+                  "description": "Model name (e.g. 'anthropic/claude-sonnet-4', 'claude-sonnet-4')"
+                }
+              },
+              "required": [
+                "model"
+              ]
+            },
+            "script": {
+              "type": "string",
+              "description": "Optional path to a script that runs each tick. In the default mode its stdout is injected into the agent's prompt as context (data-collection / change-detection pattern). With no_agent=True, the script IS the job and its stdout is delivered verbatim (classic watchdog pattern). Relative paths resolve under ~/.hermes/scripts/. ``.sh``/``.bash`` extensions run via bash, everything else via Python. On update, pass empty string to clear."
+            },
+            "no_agent": {
+              "type": "boolean",
+              "default": false,
+              "description": "Default: False (LLM-driven job — the agent runs the prompt each tick). Set True to skip the LLM entirely: the scheduler just runs ``script`` on schedule and delivers its stdout verbatim. No tokens, no agent loop, no model override honoured. \n\nREQUIREMENTS when True: ``script`` MUST be set (``prompt`` and ``skills`` are ignored). \n\nDELIVERY SEMANTICS when True: (a) non-empty stdout is sent verbatim as the message; (b) EMPTY stdout means SILENT — nothing is sent to the user and they won't see anything happened, so design your script to stay quiet when there's nothing to report (the watchdog pattern); (c) non-zero exit / timeout sends an error alert so a broken watchdog can't fail silently. \n\nWHEN TO USE True: recurring script-only pings where the script itself produces the exact message text (memory/disk/GPU watchdogs, threshold alerts, heartbeats, CI notifications, API pollers with a fixed output shape). WHEN TO USE False (default): anything that needs reasoning — summarize a feed, draft a daily briefing, pick interesting items, rephrase data for a human, follow conditional logic based on content."
+            },
+            "context_from": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional job ID or list of job IDs whose most recent completed output is injected into the prompt as context before each run. Use this to chain cron jobs: job A collects data, job B processes it. Each entry must be a valid job ID (from cronjob action='list'). Note: injects the most recent completed output — does not wait for upstream jobs running in the same tick. On update, pass an empty array to clear."
+            },
+            "enabled_toolsets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional list of toolset names to restrict the job's agent to (e.g. [\"web\", \"terminal\", \"file\", \"delegation\"]). When set, only tools from these toolsets are loaded, significantly reducing input token overhead. When omitted, all default tools are loaded. Infer from the job's prompt — e.g. use \"web\" if it calls web_search, \"terminal\" if it runs scripts, \"file\" if it reads files, \"delegation\" if it calls delegate_task. On update, pass an empty array to clear."
+            },
+            "workdir": {
+              "type": "string",
+              "description": "Optional absolute path to run the job from. When set, AGENTS.md / CLAUDE.md / .cursorrules from that directory are injected into the system prompt, and the terminal/file/code_exec tools use it as their working directory — useful for running a job inside a specific project repo. Must be an absolute path that exists. When unset (default), preserves the original behaviour: no project context files, tools use the scheduler's cwd. On update, pass an empty string to clear. Jobs with workdir run sequentially (not parallel) to keep per-job directories isolated."
+            }
+          },
+          "required": [
+            "action"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "delegate_task",
+        "description": "Spawn one or more subagents to work on tasks in isolated contexts. Each subagent gets its own conversation, terminal session, and toolset. Only the final summary is returned -- intermediate tool results never enter your context window.\n\nTWO MODES (one of 'goal' or 'tasks' is required):\n1. Single task: provide 'goal' (+ optional context, toolsets)\n2. Batch (parallel): provide 'tasks' array with up to delegation.max_concurrent_children items (default 3, configurable via config.yaml, no hard ceiling). All run concurrently and results are returned together. Nested delegation requires role='orchestrator' and delegation.max_spawn_depth >= 2.\n\nWHEN TO USE delegate_task:\n- Reasoning-heavy subtasks (debugging, code review, research synthesis)\n- Tasks that would flood your context with intermediate data\n- Parallel independent workstreams (research A and B simultaneously)\n\nWHEN NOT TO USE (use these instead):\n- Mechanical multi-step work with no reasoning needed -> use execute_code\n- Single tool call -> just call the tool directly\n- Tasks needing user interaction -> subagents cannot use clarify\n- Durable long-running work that must outlive the current turn -> use cronjob (action='create') or terminal(background=True, notify_on_complete=True) instead. delegate_task runs SYNCHRONOUSLY inside the parent turn: if the parent is interrupted (user sends a new message, /stop, /new) the child is cancelled with status='interrupted' and its work is discarded. Children cannot continue in the background.\n\nIMPORTANT:\n- Subagents have NO memory of your conversation. Pass all relevant info (file paths, error messages, constraints) via the 'context' field.\n- If the user is writing in a non-English language, or asked for output in a specific language / tone / style, say so in 'context' (e.g. \"respond in Chinese\", \"return output in Japanese\"). Otherwise subagents default to English and their summaries will contaminate your final reply with the wrong language.\n- Subagent summaries are SELF-REPORTS, not verified facts. A subagent that claims \"uploaded successfully\" or \"file written\" may be wrong. For operations with external side-effects (HTTP POST/PUT, remote writes, file creation at shared paths, publishing), require the subagent to return a verifiable handle (URL, ID, absolute path, HTTP status) and verify it yourself — fetch the URL, stat the file, read back the content — before telling the user the operation succeeded.\n- Leaf subagents (role='leaf', the default) CANNOT call: delegate_task, clarify, memory, send_message, execute_code.\n- Orchestrator subagents (role='orchestrator') retain delegate_task so they can spawn their own workers, but still cannot use clarify, memory, send_message, or execute_code. Orchestrators are bounded by delegation.max_spawn_depth (default 2) and can be disabled globally via delegation.orchestrator_enabled=false.\n- Each subagent gets its own terminal session (separate working directory and state).\n- Results are always returned as an array, one entry per task.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "goal": {
+              "type": "string",
+              "description": "What the subagent should accomplish. Be specific and self-contained -- the subagent knows nothing about your conversation history."
+            },
+            "context": {
+              "type": "string",
+              "description": "Background information the subagent needs: file paths, error messages, project structure, constraints. The more specific you are, the better the subagent performs."
+            },
+            "toolsets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Toolsets to enable for this subagent. Default: inherits your enabled toolsets. Available toolsets: 'browser', 'cronjob', 'discord', 'discord_admin', 'feishu_doc', 'feishu_drive', 'file', 'homeassistant', 'image_gen', 'kanban', 'search', 'session_search', 'skills', 'spotify', 'terminal', 'todo', 'tts', 'video', 'vision', 'web', 'yuanbao'. Common patterns: ['terminal', 'file'] for code work, ['web'] for research, ['browser'] for web interaction, ['terminal', 'file', 'web'] for full-stack tasks."
+            },
+            "tasks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "goal": {
+                    "type": "string",
+                    "description": "Task goal"
+                  },
+                  "context": {
+                    "type": "string",
+                    "description": "Task-specific context"
+                  },
+                  "toolsets": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Toolsets for this specific task. Available: 'browser', 'cronjob', 'discord', 'discord_admin', 'feishu_doc', 'feishu_drive', 'file', 'homeassistant', 'image_gen', 'kanban', 'search', 'session_search', 'skills', 'spotify', 'terminal', 'todo', 'tts', 'video', 'vision', 'web', 'yuanbao'. Use 'web' for network access, 'terminal' for shell, 'browser' for web interaction."
+                  },
+                  "acp_command": {
+                    "type": "string",
+                    "description": "Per-task ACP command override (e.g. 'claude'). Overrides the top-level acp_command for this task only."
+                  },
+                  "acp_args": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Per-task ACP args override."
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "leaf",
+                      "orchestrator"
+                    ],
+                    "description": "Per-task role override. See top-level 'role' for semantics."
+                  }
+                },
+                "required": [
+                  "goal"
+                ]
+              },
+              "description": "Batch mode: tasks to run in parallel (limit configurable via delegation.max_concurrent_children, default 3). Each gets its own subagent with isolated context and terminal session. When provided, top-level goal/context/toolsets are ignored."
+            },
+            "role": {
+              "type": "string",
+              "enum": [
+                "leaf",
+                "orchestrator"
+              ],
+              "description": "Role of the child agent. 'leaf' (default) = focused worker, cannot delegate further. 'orchestrator' = can use delegate_task to spawn its own workers. Requires delegation.max_spawn_depth >= 2 in config; ignored (treated as 'leaf') when the child would exceed max_spawn_depth or when delegation.orchestrator_enabled=false."
+            },
+            "acp_command": {
+              "type": "string",
+              "description": "Override ACP command for child agents (e.g. 'claude', 'copilot'). When set, children use ACP subprocess transport instead of inheriting the parent's transport. Enables spawning Claude Code (claude --acp --stdio) or other ACP-capable agents from any parent, including Discord/Telegram/CLI."
+            },
+            "acp_args": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Arguments for the ACP command (default: ['--acp', '--stdio']). Only used when acp_command is set. Example: ['--acp', '--stdio', '--model', 'claude-opus-4-6']"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "execute_code",
+        "description": "Run a Python script that can call Hermes tools programmatically. Use this when you need 3+ tool calls with processing logic between them, need to filter/reduce large tool outputs before they enter your context, need conditional branching (if X then Y else Z), or need to loop (fetch N pages, process N files, retry on failure).\n\nUse normal tool calls instead when: single tool call with no processing, you need to see the full result and apply complex reasoning, or the task requires interactive user input.\n\nAvailable via `from hermes_tools import ...`:\n\n  read_file(path: str, offset: int = 1, limit: int = 500) -> dict\n    Lines are 1-indexed. Returns {\"content\": \"...\", \"total_lines\": N}\n  write_file(path: str, content: str) -> dict\n    Always overwrites the entire file.\n  search_files(pattern: str, target=\"content\", path=\".\", file_glob=None, limit=50) -> dict\n    target: \"content\" (search inside files) or \"files\" (find files by name). Returns {\"matches\": [...]}\n  patch(path: str, old_string: str, new_string: str, replace_all: bool = False) -> dict\n    Replaces old_string with new_string in the file.\n  terminal(command: str, timeout=None, workdir=None) -> dict\n    Foreground only (no background/pty). Returns {\"output\": \"...\", \"exit_code\": N}\n\nLimits: 5-minute timeout, 50KB stdout cap, max 50 tool calls per script. terminal() is foreground-only (no background or pty).\n\nScripts run in the session's working directory with the active venv's python, so project deps (pandas, etc.) and relative paths work like in terminal().\n\nPrint your final result to stdout. Use Python stdlib (json, re, math, csv, datetime, collections, etc.) for processing between tool calls.\n\nAlso available (no import needed — built into hermes_tools):\n  json_parse(text: str) — json.loads with strict=False; use for terminal() output with control chars\n  shell_quote(s: str) — shlex.quote(); use when interpolating dynamic strings into shell commands\n  retry(fn, max_attempts=3, delay=2) — retry with exponential backoff for transient failures",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "description": "Python code to execute. Import tools with `from hermes_tools import terminal, ...` and print your final result to stdout."
+            }
+          },
+          "required": [
+            "code"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "memory",
+        "description": "Save durable information to persistent memory that survives across sessions. Memory is injected into future turns, so keep it compact and focused on facts that will still matter later.\n\nWHEN TO SAVE (do this proactively, don't wait to be asked):\n- User corrects you or says 'remember this' / 'don't do that again'\n- User shares a preference, habit, or personal detail (name, role, timezone, coding style)\n- You discover something about the environment (OS, installed tools, project structure)\n- You learn a convention, API quirk, or workflow specific to this user's setup\n- You identify a stable fact that will be useful again in future sessions\n\nPRIORITY: User preferences and corrections > environment facts > procedural knowledge. The most valuable memory prevents the user from having to repeat themselves.\n\nDo NOT save task progress, session outcomes, completed-work logs, or temporary TODO state to memory; use session_search to recall those from past transcripts.\nIf you've discovered a new way to do something, solved a problem that could be necessary later, save it as a skill with the skill tool.\n\nTWO TARGETS:\n- 'user': who the user is -- name, role, preferences, communication style, pet peeves\n- 'memory': your notes -- environment facts, project conventions, tool quirks, lessons learned\n\nACTIONS: add (new entry), replace (update existing -- old_text identifies it), remove (delete -- old_text identifies it).\n\nSKIP: trivial/obvious info, things easily re-discovered, raw data dumps, and temporary task state.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "add",
+                "replace",
+                "remove"
+              ],
+              "description": "The action to perform."
+            },
+            "target": {
+              "type": "string",
+              "enum": [
+                "memory",
+                "user"
+              ],
+              "description": "Which memory store: 'memory' for personal notes, 'user' for user profile."
+            },
+            "content": {
+              "type": "string",
+              "description": "The entry content. Required for 'add' and 'replace'."
+            },
+            "old_text": {
+              "type": "string",
+              "description": "Short unique substring identifying the entry to replace or remove."
+            }
+          },
+          "required": [
+            "action",
+            "target"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "patch",
+        "description": "Targeted find-and-replace edits in files. Use this instead of sed/awk in terminal. Uses fuzzy matching (9 strategies) so minor whitespace/indentation differences won't break it. Returns a unified diff. Auto-runs syntax checks after editing.\n\nReplace mode (default): find a unique string and replace it.\nPatch mode: apply V4A multi-file patches for bulk changes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "replace",
+                "patch"
+              ],
+              "description": "Edit mode: 'replace' for targeted find-and-replace, 'patch' for V4A multi-file patches",
+              "default": "replace"
+            },
+            "path": {
+              "type": "string",
+              "description": "File path to edit (required for 'replace' mode)"
+            },
+            "old_string": {
+              "type": "string",
+              "description": "Text to find in the file (required for 'replace' mode). Must be unique in the file unless replace_all=true. Include enough surrounding context to ensure uniqueness."
+            },
+            "new_string": {
+              "type": "string",
+              "description": "Replacement text (required for 'replace' mode). Can be empty string to delete the matched text."
+            },
+            "replace_all": {
+              "type": "boolean",
+              "description": "Replace all occurrences instead of requiring a unique match (default: false)",
+              "default": false
+            },
+            "patch": {
+              "type": "string",
+              "description": "V4A format patch content (required for 'patch' mode). Format:\n*** Begin Patch\n*** Update File: path/to/file\n@@ context hint @@\n context line\n-removed line\n+added line\n*** End Patch"
+            }
+          },
+          "required": [
+            "mode"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "process",
+        "description": "Manage background processes started with terminal(background=true). Actions: 'list' (show all), 'poll' (check status + new output), 'log' (full output with pagination), 'wait' (block until done or timeout), 'kill' (terminate), 'write' (send raw stdin data without newline), 'submit' (send data + Enter, for answering prompts), 'close' (close stdin/send EOF).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "list",
+                "poll",
+                "log",
+                "wait",
+                "kill",
+                "write",
+                "submit",
+                "close"
+              ],
+              "description": "Action to perform on background processes"
+            },
+            "session_id": {
+              "type": "string",
+              "description": "Process session ID (from terminal background output). Required for all actions except 'list'."
+            },
+            "data": {
+              "type": "string",
+              "description": "Text to send to process stdin (for 'write' and 'submit' actions)"
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to block for 'wait' action. Returns partial output on timeout.",
+              "minimum": 1
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line offset for 'log' action (default: last 200 lines)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max lines to return for 'log' action",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "action"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "read_file",
+        "description": "Read a text file with line numbers and pagination. Use this instead of cat/head/tail in terminal. Output format: 'LINE_NUM|CONTENT'. Suggests similar filenames if not found. Use offset and limit for large files. Reads exceeding ~100K characters are rejected; use offset and limit to read specific sections of large files. NOTE: Cannot read images or binary files — use vision_analyze for images.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to read (absolute, relative, or ~/path)"
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Line number to start reading from (1-indexed, default: 1)",
+              "default": 1,
+              "minimum": 1
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of lines to read (default: 500, max: 2000)",
+              "default": 500,
+              "maximum": 2000
+            }
+          },
+          "required": [
+            "path"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "search_files",
+        "description": "Search file contents or find files by name. Use this instead of grep/rg/find/ls in terminal. Ripgrep-backed, faster than shell equivalents.\n\nContent search (target='content'): Regex search inside files. Output modes: full matches with line numbers, file paths only, or match counts.\n\nFile search (target='files'): Find files by glob pattern (e.g., '*.py', '*config*'). Also use this instead of ls — results sorted by modification time.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "description": "Regex pattern for content search, or glob pattern (e.g., '*.py') for file search"
+            },
+            "target": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files"
+              ],
+              "description": "'content' searches inside file contents, 'files' searches for files by name",
+              "default": "content"
+            },
+            "path": {
+              "type": "string",
+              "description": "Directory or file to search in (default: current working directory)",
+              "default": "."
+            },
+            "file_glob": {
+              "type": "string",
+              "description": "Filter files by pattern in grep mode (e.g., '*.py' to only search Python files)"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of results to return (default: 50)",
+              "default": 50
+            },
+            "offset": {
+              "type": "integer",
+              "description": "Skip first N results for pagination (default: 0)",
+              "default": 0
+            },
+            "output_mode": {
+              "type": "string",
+              "enum": [
+                "content",
+                "files_only",
+                "count"
+              ],
+              "description": "Output format for grep mode: 'content' shows matching lines with line numbers, 'files_only' lists file paths, 'count' shows match counts per file",
+              "default": "content"
+            },
+            "context": {
+              "type": "integer",
+              "description": "Number of context lines before and after each match (grep mode only)",
+              "default": 0
+            }
+          },
+          "required": [
+            "pattern"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "session_search",
+        "description": "Search your long-term memory of past conversations, or browse recent sessions. This is your recall -- every past session is searchable, and this tool summarizes what happened.\n\nTWO MODES:\n1. Recent sessions (no query): Call with no arguments to see what was worked on recently. Returns titles, previews, and timestamps. Zero LLM cost, instant. Start here when the user asks what were we working on or what did we do recently.\n2. Keyword search (with query): Search for specific topics across all past sessions. Returns LLM-generated summaries of matching sessions.\n\nUSE THIS PROACTIVELY when:\n- The user says 'we did this before', 'remember when', 'last time', 'as I mentioned'\n- The user asks about a topic you worked on before but don't have in current context\n- The user references a project, person, or concept that seems familiar but isn't in memory\n- You want to check if you've solved a similar problem before\n- The user asks 'what did we do about X?' or 'how did we fix Y?'\n\nDon't hesitate to search when it is actually cross-session -- it's fast and cheap. Better to search and confirm than to guess or ask the user to repeat themselves.\n\nSearch syntax: keywords joined with OR for broad recall (elevenlabs OR baseten OR funding), phrases for exact match (\"docker networking\"), boolean (python NOT java), prefix (deploy*). IMPORTANT: Use OR between keywords for best results — FTS5 defaults to AND which misses sessions that only mention some terms. If a broad OR query returns nothing, try individual keyword searches in parallel. Returns summaries of the top matching sessions.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query — keywords, phrases, or boolean expressions to find in past sessions. Omit this parameter entirely to browse recent sessions instead (returns titles, previews, timestamps with no LLM cost)."
+            },
+            "role_filter": {
+              "type": "string",
+              "description": "Optional: only search messages from specific roles (comma-separated). E.g. 'user,assistant' to skip tool outputs."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max sessions to summarize (default: 3, max: 5).",
+              "default": 3
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "skill_manage",
+        "description": "Manage skills (create, update, delete). Skills are your procedural memory — reusable approaches for recurring task types. New skills go to ~/.hermes/skills/; existing skills can be modified wherever they live.\n\nActions: create (full SKILL.md + optional category), patch (old_string/new_string — preferred for fixes), edit (full SKILL.md rewrite — major overhauls only), delete, write_file, remove_file.\n\nOn delete, pass `absorbed_into=<umbrella>` when you're merging this skill's content into another one, or `absorbed_into=\"\"` when you're pruning it with no forwarding target. This lets the curator tell consolidation from pruning without guessing, so downstream consumers (cron jobs that reference the old skill name, etc.) get updated correctly. The target you name in `absorbed_into` must already exist — create/patch the umbrella first, then delete.\n\nCreate when: complex task succeeded (5+ calls), errors overcome, user-corrected approach worked, non-trivial workflow discovered, or user asks you to remember a procedure.\nUpdate when: instructions stale/wrong, OS-specific failures, missing steps or pitfalls found during use. If you used a skill and hit issues not covered by it, patch it immediately.\n\nAfter difficult/iterative tasks, offer to save as a skill. Skip for simple one-offs. Confirm with user before creating/deleting.\n\nGood skills: trigger conditions, numbered steps with exact commands, pitfalls section, verification steps. Use skill_view() to see format examples.\n\nPinned skills are off-limits — all write actions refuse with a message pointing the user to `hermes curator unpin <name>`. Don't try to route around this by renaming or recreating.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "create",
+                "patch",
+                "edit",
+                "delete",
+                "write_file",
+                "remove_file"
+              ],
+              "description": "The action to perform."
+            },
+            "name": {
+              "type": "string",
+              "description": "Skill name (lowercase, hyphens/underscores, max 64 chars). Must match an existing skill for patch/edit/delete/write_file/remove_file."
+            },
+            "content": {
+              "type": "string",
+              "description": "Full SKILL.md content (YAML frontmatter + markdown body). Required for 'create' and 'edit'. For 'edit', read the skill first with skill_view() and provide the complete updated text."
+            },
+            "old_string": {
+              "type": "string",
+              "description": "Text to find in the file (required for 'patch'). Must be unique unless replace_all=true. Include enough surrounding context to ensure uniqueness."
+            },
+            "new_string": {
+              "type": "string",
+              "description": "Replacement text (required for 'patch'). Can be empty string to delete the matched text."
+            },
+            "replace_all": {
+              "type": "boolean",
+              "description": "For 'patch': replace all occurrences instead of requiring a unique match (default: false)."
+            },
+            "category": {
+              "type": "string",
+              "description": "Optional category/domain for organizing the skill (e.g., 'devops', 'data-science', 'mlops'). Creates a subdirectory grouping. Only used with 'create'."
+            },
+            "file_path": {
+              "type": "string",
+              "description": "Path to a supporting file within the skill directory. For 'write_file'/'remove_file': required, must be under references/, templates/, scripts/, or assets/. For 'patch': optional, defaults to SKILL.md if omitted."
+            },
+            "file_content": {
+              "type": "string",
+              "description": "Content for the file. Required for 'write_file'."
+            },
+            "absorbed_into": {
+              "type": "string",
+              "description": "For 'delete' only — declares intent so the curator can tell consolidation from pruning without guessing. Pass the umbrella skill name when this skill's content was merged into another (the target must already exist). Pass an empty string when the skill is truly stale and being pruned with no forwarding target. Omitting the arg on delete is supported for backward compatibility but downstream tooling (e.g. cron-job skill reference rewriting) will have to guess at intent."
+            }
+          },
+          "required": [
+            "action",
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "skill_view",
+        "description": "Skills allow for loading information about specific tasks and workflows, as well as scripts and templates. Load a skill's full content or access its linked files (references, templates, scripts). First call returns SKILL.md content plus a 'linked_files' dict showing available references/templates/scripts. To access those, call again with file_path parameter.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "The skill name (use skills_list to see available skills). For plugin-provided skills, use the qualified form 'plugin:skill' (e.g. 'superpowers:writing-plans')."
+            },
+            "file_path": {
+              "type": "string",
+              "description": "OPTIONAL: Path to a linked file within the skill (e.g., 'references/api.md', 'templates/config.yaml', 'scripts/validate.py'). Omit to get the main SKILL.md content."
+            }
+          },
+          "required": [
+            "name"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "skills_list",
+        "description": "List available skills (name + description). Use skill_view(name) to load full content.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "description": "Optional category filter to narrow results"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "terminal",
+        "description": "Execute shell commands on a Linux environment. Filesystem usually persists between calls.\n\nDo NOT use cat/head/tail to read files — use read_file instead.\nDo NOT use grep/rg/find to search — use search_files instead.\nDo NOT use ls to list directories — use search_files(target='files') instead.\nDo NOT use sed/awk to edit files — use patch instead.\nDo NOT use echo/cat heredoc to create files — use write_file instead.\nReserve terminal for: builds, installs, git, processes, scripts, network, package managers, and anything that needs a shell.\n\nForeground (default): Commands return INSTANTLY when done, even if the timeout is high. Set timeout=300 for long builds/scripts — you'll still get the result in seconds if it's fast. Prefer foreground for short commands.\nBackground: Set background=true to get a session_id. Two patterns:\n  (1) Long-lived processes that never exit (servers, watchers).\n  (2) Long-running tasks with notify_on_complete=true — you can keep working on other things and the system auto-notifies you when the task finishes. Great for test suites, builds, deployments, or anything that takes more than a minute.\nFor servers/watchers, do NOT use shell-level background wrappers (nohup/disown/setsid/trailing '&') in foreground mode. Use background=true so Hermes can track lifecycle and output.\nAfter starting a server, verify readiness with a health check or log signal, then run tests in a separate terminal() call. Avoid blind sleep loops.\nUse process(action=\"poll\") for progress checks, process(action=\"wait\") to block until done.\nWorking directory: Use 'workdir' for per-command cwd.\nPTY mode: Set pty=true for interactive CLI tools (Codex, Claude Code, Python REPL).\n\nDo NOT use vim/nano/interactive tools without pty=true — they hang without a pseudo-terminal. Pipe git output to cat if it might page.\n",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The command to execute on the VM"
+            },
+            "background": {
+              "type": "boolean",
+              "description": "Run the command in the background. Two patterns: (1) Long-lived processes that never exit (servers, watchers). (2) Long-running tasks paired with notify_on_complete=true — you can keep working and get notified when the task finishes. For short commands, prefer foreground with a generous timeout instead.",
+              "default": false
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Max seconds to wait (default: 180, foreground max: 600). Returns INSTANTLY when command finishes — set high for long tasks, you won't wait unnecessarily. Foreground timeout above 600s is rejected; use background=true for longer commands.",
+              "minimum": 1
+            },
+            "workdir": {
+              "type": "string",
+              "description": "Working directory for this command (absolute path). Defaults to the session working directory."
+            },
+            "pty": {
+              "type": "boolean",
+              "description": "Run in pseudo-terminal (PTY) mode for interactive CLI tools like Codex, Claude Code, or Python REPL. Only works with local and SSH backends. Default: false.",
+              "default": false
+            },
+            "notify_on_complete": {
+              "type": "boolean",
+              "description": "When true (and background=true), you'll be automatically notified exactly once when the process finishes. **This is the right choice for almost every long-running task** — tests, builds, deployments, multi-item batch jobs, anything that takes over a minute and has a defined end. Use this and keep working on other things; the system notifies you on exit. MUTUALLY EXCLUSIVE with watch_patterns — when both are set, watch_patterns is dropped.",
+              "default": false
+            },
+            "watch_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Strings to watch for in background process output. HARD RATE LIMIT: at most 1 notification per 15 seconds per process — matches arriving inside the cooldown are dropped. After 3 consecutive 15-second windows with dropped matches, watch_patterns is automatically disabled for that process and promoted to notify_on_complete behavior (one notification on exit, no more mid-process spam). USE ONLY for truly rare, one-shot mid-process signals on LONG-LIVED processes that will never exit on their own — e.g. ['Application startup complete'] on a server so you know when to hit its endpoint, or ['migration done'] on a daemon. DO NOT use for: (1) end-of-run markers like 'DONE'/'PASS' — use notify_on_complete instead; (2) error patterns like 'ERROR'/'Traceback' in loops or multi-item batch jobs — they fire on every iteration and you'll hit the strike limit fast; (3) anything you'd ever combine with notify_on_complete. When in doubt, choose notify_on_complete. MUTUALLY EXCLUSIVE with notify_on_complete — set one, not both."
+            }
+          },
+          "required": [
+            "command"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "text_to_speech",
+        "description": "Convert text to speech audio. Returns a MEDIA: path that the platform delivers as native audio. Compatible providers render as a voice bubble on Telegram; otherwise audio is sent as a regular attachment. In CLI mode, saves to ~/voice-memos/. Voice and provider are user-configured (built-in providers like edge/openai or custom command providers under tts.providers.<name>), not model-selected.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "The text to convert to speech. Provider-specific character caps apply and are enforced automatically (OpenAI 4096, xAI 15000, MiniMax 10000, ElevenLabs 5k-40k depending on model); over-long input is truncated."
+            },
+            "output_path": {
+              "type": "string",
+              "description": "Optional custom file path to save the audio. Defaults to ~/.hermes/audio_cache/<timestamp>.mp3"
+            }
+          },
+          "required": [
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "todo",
+        "description": "Manage your task list for the current session. Use for complex tasks with 3+ steps or when the user provides multiple tasks. Call with no parameters to read the current list.\n\nWriting:\n- Provide 'todos' array to create/update items\n- merge=false (default): replace the entire list with a fresh plan\n- merge=true: update existing items by id, add any new ones\n\nEach item: {id: string, content: string, status: pending|in_progress|completed|cancelled}\nList order is priority. Only ONE item in_progress at a time.\nMark items completed immediately when done. If something fails, cancel it and add a revised item.\n\nAlways returns the full current list.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "todos": {
+              "type": "array",
+              "description": "Task items to write. Omit to read current list.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique item identifier"
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "Task description"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "in_progress",
+                      "completed",
+                      "cancelled"
+                    ],
+                    "description": "Current status"
+                  }
+                },
+                "required": [
+                  "id",
+                  "content",
+                  "status"
+                ]
+              }
+            },
+            "merge": {
+              "type": "boolean",
+              "description": "true: update existing items by id, add new ones. false (default): replace the entire list.",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "vision_analyze",
+        "description": "Inspect an image from a URL, file path, or tool output when you need closer detail than what's visible in the conversation. If the user's image is already attached to the conversation and you can see it, just answer directly — only call this tool for images referenced by URL/path, images returned inside other tool results (browser screenshots, search thumbnails), or when you need a deeper look at a specific region the main model's vision may have missed.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "image_url": {
+              "type": "string",
+              "description": "Image URL (http/https) or local file path to analyze."
+            },
+            "question": {
+              "type": "string",
+              "description": "Your specific question or request about the image to resolve. The AI will automatically provide a complete image description AND answer your specific question."
+            }
+          },
+          "required": [
+            "image_url",
+            "question"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "write_file",
+        "description": "Write content to a file, completely replacing existing content. Use this instead of echo/cat heredoc in terminal. Creates parent directories automatically. OVERWRITES the entire file — use 'patch' for targeted edits.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the file to write (will be created if it doesn't exist, overwritten if it does)"
+            },
+            "content": {
+              "type": "string",
+              "description": "Complete content to write to the file"
+            }
+          },
+          "required": [
+            "path",
+            "content"
+          ]
+        }
+      }
+    }
+  ],
+  "message_count": 51,
+  "messages": [
+    {
+      "role": "user",
+      "content": "🚀 Hermes WebUI 部署成功！\\n🔗 访问地址: https://varieties-copies-signs-inches.trycloudflare.com\\n🤖 当前模型: gemini-3-flash\\n请将此消息发送到我的飞书和电报主频道。"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "skills_list-1777963360670200400-13201",
+          "call_id": "skills_list-1777963360670200400-13201",
+          "response_item_id": "fc_skills_list-1777963360670200400-13201",
+          "type": "function",
+          "function": {
+            "name": "skills_list",
+            "arguments": "{}"
+          }
+        },
+        {
+          "id": "search_files-1777963360820256600-13202",
+          "call_id": "search_files-1777963360820256600-13202",
+          "response_item_id": "fc_search_files-1777963360820256600-13202",
+          "type": "function",
+          "function": {
+            "name": "search_files",
+            "arguments": "{\"target\": \"files\",\"pattern\": \"*\"}"
+          }
+        },
+        {
+          "id": "search_files-1777963360932588960-13203",
+          "call_id": "search_files-1777963360932588960-13203",
+          "response_item_id": "fc_search_files-1777963360932588960-13203",
+          "type": "function",
+          "function": {
+            "name": "search_files",
+            "arguments": "{\"path\": \"memory\",\"pattern\": \"*\",\"target\": \"files\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "skills_list",
+      "content": "{\"success\": true, \"skills\": [{\"name\": \"dogfood\", \"description\": \"Exploratory QA of web apps: find bugs, evidence, reports.\", \"category\": null}, {\"name\": \"yuanbao\", \"description\": \"Yuanbao (元宝) groups: @mention users, query info/members.\", \"category\": null}, {\"name\": \"claude-code\", \"description\": \"Delegate coding to Claude Code CLI (features, PRs).\", \"category\": \"autonomous-ai-agents\"}, {\"name\": \"codex\", \"description\": \"Delegate coding to OpenAI Codex CLI (features, PRs).\", \"category\": \"autonomous-ai-agents\"}, {\"name\": \"hermes-agent\", \"description\": \"Configure, extend, or contribute to Hermes Agent.\", \"category\": \"autonomous-ai-agents\"}, {\"name\": \"opencode\", \"description\": \"Delegate coding to OpenCode CLI (features, PR review).\", \"category\": \"autonomous-ai-agents\"}, {\"name\": \"architecture-diagram\", \"description\": \"Dark-themed SVG architecture/cloud/infra diagrams as HTML.\", \"category\": \"creative\"}, {\"name\": \"ascii-art\", \"description\": \"ASCII art: pyfiglet, cowsay, boxes, image-to-ascii.\", \"category\": \"creative\"}, {\"name\": \"ascii-video\", \"description\": \"ASCII video: convert video/audio to colored ASCII MP4/GIF.\", \"category\": \"creative\"}, {\"name\": \"baoyu-comic\", \"description\": \"Knowledge comics (知识漫画): educational, biography, tutorial.\", \"category\": \"creative\"}, {\"name\": \"baoyu-infographic\", \"description\": \"Infographics: 21 layouts x 21 styles (信息图, 可视化).\", \"category\": \"creative\"}, {\"name\": \"claude-design\", \"description\": \"Design one-off HTML artifacts (landing, deck, prototype).\", \"category\": \"creative\"}, {\"name\": \"comfyui\", \"description\": \"Generate images, video, and audio with ComfyUI — install, launch, manage nodes/models, run workflows with parameter injection. Uses the official comfy-cli for lifecycle and direct REST/WebSocket API for execution.\", \"category\": \"creative\"}, {\"name\": \"design-md\", \"description\": \"Author/validate/export Google's DESIGN.md token spec files.\", \"category\": \"creative\"}, {\"name\": \"excalidraw\", \"description\": \"Hand-drawn Excalidraw JSON diagrams (arch, flow, seq).\", \"category\": \"creative\"}, {\"name\": \"humanizer\", \"description\": \"Humanize text: strip AI-isms and add real voice.\", \"category\": \"creative\"}, {\"name\": \"ideation\", \"description\": \"Generate project ideas via creative constraints.\", \"category\": \"creative\"}, {\"name\": \"manim-video\", \"description\": \"Manim CE animations: 3Blue1Brown math/algo videos.\", \"category\": \"creative\"}, {\"name\": \"p5js\", \"description\": \"p5.js sketches: gen art, shaders, interactive, 3D.\", \"category\": \"creative\"}, {\"name\": \"pixel-art\", \"description\": \"Pixel art w/ era palettes (NES, Game Boy, PICO-8).\", \"category\": \"creative\"}, {\"name\": \"popular-web-designs\", \"description\": \"54 real design systems (Stripe, Linear, Vercel) as HTML/CSS.\", \"category\": \"creative\"}, {\"name\": \"pretext\", \"description\": \"Use when building creative browser demos with @chenglou/pretext — DOM-free text layout for ASCII art, typographic flow around obstacles, text-as-geometry games, kinetic typography, and text-powered generative art. Produces single-file HTML demos by default.\", \"category\": \"creative\"}, {\"name\": \"sketch\", \"description\": \"Throwaway HTML mockups: 2-3 design variants to compare.\", \"category\": \"creative\"}, {\"name\": \"songwriting-and-ai-music\", \"description\": \"Songwriting craft and Suno AI music prompts.\", \"category\": \"creative\"}, {\"name\": \"touchdesigner-mcp\", \"description\": \"Control a running TouchDesigner instance via twozero MCP — create operators, set parameters, wire connections, execute Python, build real-time visuals. 36 native tools.\", \"category\": \"creative\"}, {\"name\": \"jupyter-live-kernel\", \"description\": \"Iterative Python via live Jupyter kernel (hamelnb).\", \"category\": \"data-science\"}, {\"name\": \"kanban-orchestrator\", \"description\": \"Decomposition playbook + specialist-roster conventions + anti-temptation rules for an orchestrator profile routing work through Kanban. The \\\"don't do the work yourself\\\" rule and the basic lifecycle are auto-injected into every kanban worker's system prompt; this skill is the deeper playbook when you're specifically playing the orchestrator role.\", \"category\": \"devops\"}, {\"name\": \"kanban-worker\", \"description\": \"Pitfalls, examples, and edge cases for Hermes Kanban workers. The lifecycle itself is auto-injected into every worker's system prompt as KANBAN_GUIDANCE (from agent/prompt_builder.py); this skill is what you load when you want deeper detail on specific scenarios.\", \"category\": \"devops\"}, {\"name\": \"webhook-subscriptions\", \"description\": \"Webhook subscriptions: event-driven agent runs.\", \"category\": \"devops\"}, {\"name\": \"himalaya\", \"description\": \"Himalaya CLI: IMAP/SMTP email from terminal.\", \"category\": \"email\"}, {\"name\": \"minecraft-modpack-server\", \"description\": \"Host modded Minecraft servers (CurseForge, Modrinth).\", \"category\": \"gaming\"}, {\"name\": \"pokemon-player\", \"description\": \"Play Pokemon via headless emulator + RAM reads.\", \"category\": \"gaming\"}, {\"name\": \"codebase-inspection\", \"description\": \"Inspect codebases w/ pygount: LOC, languages, ratios.\", \"category\": \"github\"}, {\"name\": \"github-auth\", \"description\": \"GitHub auth setup: HTTPS tokens, SSH keys, gh CLI login.\", \"category\": \"github\"}, {\"name\": \"github-code-review\", \"description\": \"Review PRs: diffs, inline comments via gh or REST.\", \"category\": \"github\"}, {\"name\": \"github-issues\", \"description\": \"Create, triage, label, assign GitHub issues via gh or REST.\", \"category\": \"github\"}, {\"name\": \"github-pr-workflow\", \"description\": \"GitHub PR lifecycle: branch, commit, open, CI, merge.\", \"category\": \"github\"}, {\"name\": \"github-repo-management\", \"description\": \"Clone/create/fork repos; manage remotes, releases.\", \"category\": \"github\"}, {\"name\": \"native-mcp\", \"description\": \"MCP client: connect servers, register tools (stdio/HTTP).\", \"category\": \"mcp\"}, {\"name\": \"gif-search\", \"description\": \"Search/download GIFs from Tenor via curl + jq.\", \"category\": \"media\"}, {\"name\": \"heartmula\", \"description\": \"HeartMuLa: Suno-like song generation from lyrics + tags.\", \"category\": \"media\"}, {\"name\": \"songsee\", \"description\": \"Audio spectrograms/features (mel, chroma, MFCC) via CLI.\", \"category\": \"media\"}, {\"name\": \"spotify\", \"description\": \"Spotify: play, search, queue, manage playlists and devices.\", \"category\": \"media\"}, {\"name\": \"youtube-content\", \"description\": \"YouTube transcripts to summaries, threads, blogs.\", \"category\": \"media\"}, {\"name\": \"audiocraft-audio-generation\", \"description\": \"AudioCraft: MusicGen text-to-music, AudioGen text-to-sound.\", \"category\": \"mlops\"}, {\"name\": \"axolotl\", \"description\": \"Axolotl: YAML LLM fine-tuning (LoRA, DPO, GRPO).\", \"category\": \"mlops\"}, {\"name\": \"dspy\", \"description\": \"DSPy: declarative LM programs, auto-optimize prompts, RAG.\", \"category\": \"mlops\"}, {\"name\": \"evaluating-llms-harness\", \"description\": \"lm-eval-harness: benchmark LLMs (MMLU, GSM8K, etc.).\", \"category\": \"mlops\"}, {\"name\": \"fine-tuning-with-trl\", \"description\": \"TRL: SFT, DPO, PPO, GRPO, reward modeling for LLM RLHF.\", \"category\": \"mlops\"}, {\"name\": \"huggingface-hub\", \"description\": \"HuggingFace hf CLI: search/download/upload models, datasets.\", \"category\": \"mlops\"}, {\"name\": \"llama-cpp\", \"description\": \"llama.cpp local GGUF inference + HF Hub model discovery.\", \"category\": \"mlops\"}, {\"name\": \"obliteratus\", \"description\": \"OBLITERATUS: abliterate LLM refusals (diff-in-means).\", \"category\": \"mlops\"}, {\"name\": \"outlines\", \"description\": \"Outlines: structured JSON/regex/Pydantic LLM generation.\", \"category\": \"mlops\"}, {\"name\": \"segment-anything-model\", \"description\": \"SAM: zero-shot image segmentation via points, boxes, masks.\", \"category\": \"mlops\"}, {\"name\": \"serving-llms-vllm\", \"description\": \"vLLM: high-throughput LLM serving, OpenAI API, quantization.\", \"category\": \"mlops\"}, {\"name\": \"unsloth\", \"description\": \"Unsloth: 2-5x faster LoRA/QLoRA fine-tuning, less VRAM.\", \"category\": \"mlops\"}, {\"name\": \"weights-and-biases\", \"description\": \"W&B: log ML experiments, sweeps, model registry, dashboards.\", \"category\": \"mlops\"}, {\"name\": \"obsidian\", \"description\": \"Read, search, and create notes in the Obsidian vault.\", \"category\": \"note-taking\"}, {\"name\": \"airtable\", \"description\": \"Airtable REST API via curl. Records CRUD, filters, upserts.\", \"category\": \"productivity\"}, {\"name\": \"google-workspace\", \"description\": \"Gmail, Calendar, Drive, Docs, Sheets via gws CLI or Python.\", \"category\": \"productivity\"}, {\"name\": \"linear\", \"description\": \"Linear: manage issues, projects, teams via GraphQL + curl.\", \"category\": \"productivity\"}, {\"name\": \"maps\", \"description\": \"Geocode, POIs, routes, timezones via OpenStreetMap/OSRM.\", \"category\": \"productivity\"}, {\"name\": \"nano-pdf\", \"description\": \"Edit PDF text/typos/titles via nano-pdf CLI (NL prompts).\", \"category\": \"productivity\"}, {\"name\": \"notion\", \"description\": \"Notion API via curl: pages, databases, blocks, search.\", \"category\": \"productivity\"}, {\"name\": \"ocr-and-documents\", \"description\": \"Extract text from PDFs/scans (pymupdf, marker-pdf).\", \"category\": \"productivity\"}, {\"name\": \"powerpoint\", \"description\": \"Create, read, edit .pptx decks, slides, notes, templates.\", \"category\": \"productivity\"}, {\"name\": \"godmode\", \"description\": \"Jailbreak LLMs: Parseltongue, GODMODE, ULTRAPLINIAN.\", \"category\": \"red-teaming\"}, {\"name\": \"arxiv\", \"description\": \"Search arXiv papers by keyword, author, category, or ID.\", \"category\": \"research\"}, {\"name\": \"blogwatcher\", \"description\": \"Monitor blogs and RSS/Atom feeds via blogwatcher-cli tool.\", \"category\": \"research\"}, {\"name\": \"llm-wiki\", \"description\": \"Karpathy's LLM Wiki: build/query interlinked markdown KB.\", \"category\": \"research\"}, {\"name\": \"polymarket\", \"description\": \"Query Polymarket: markets, prices, orderbooks, history.\", \"category\": \"research\"}, {\"name\": \"research-paper-writing\", \"description\": \"Write ML papers for NeurIPS/ICML/ICLR: design→submit.\", \"category\": \"research\"}, {\"name\": \"openhue\", \"description\": \"Control Philips Hue lights, scenes, rooms via OpenHue CLI.\", \"category\": \"smart-home\"}, {\"name\": \"xurl\", \"description\": \"X/Twitter via xurl CLI: post, search, DM, media, v2 API.\", \"category\": \"social-media\"}, {\"name\": \"debugging-hermes-tui-commands\", \"description\": \"Debug Hermes TUI slash commands: Python, gateway, Ink UI.\", \"category\": \"software-development\"}, {\"name\": \"hermes-agent-skill-authoring\", \"description\": \"Author in-repo SKILL.md: frontmatter, validator, structure.\", \"category\": \"software-development\"}, {\"name\": \"node-inspect-debugger\", \"description\": \"Debug Node.js via --inspect + Chrome DevTools Protocol CLI.\", \"category\": \"software-development\"}, {\"name\": \"plan\", \"description\": \"Plan mode: write markdown plan to .hermes/plans/, no exec.\", \"category\": \"software-development\"}, {\"name\": \"python-debugpy\", \"description\": \"Debug Python: pdb REPL + debugpy remote (DAP).\", \"category\": \"software-development\"}, {\"name\": \"requesting-code-review\", \"description\": \"Pre-commit review: security scan, quality gates, auto-fix.\", \"category\": \"software-development\"}, {\"name\": \"spike\", \"description\": \"Throwaway experiments to validate an idea before build.\", \"category\": \"software-development\"}, {\"name\": \"subagent-driven-development\", \"description\": \"Execute plans via delegate_task subagents (2-stage review).\", \"category\": \"software-development\"}, {\"name\": \"systematic-debugging\", \"description\": \"4-phase root cause debugging: understand bugs before fixing.\", \"category\": \"software-development\"}, {\"name\": \"test-driven-development\", \"description\": \"TDD: enforce RED-GREEN-REFACTOR, tests before code.\", \"category\": \"software-development\"}, {\"name\": \"writing-plans\", \"description\": \"Write implementation plans: bite-sized tasks, paths, code.\", \"category\": \"software-development\"}], \"categories\": [\"autonomous-ai-agents\", \"creative\", \"data-science\", \"devops\", \"email\", \"gaming\", \"github\", \"mcp\", \"media\", \"mlops\", \"note-taking\", \"productivity\", \"red-teaming\", \"research\", \"smart-home\", \"social-media\", \"software-development\"], \"count\": 85, \"hint\": \"Use skill_view(name) to see full content, tags, and linked files\"}",
+      "tool_call_id": "skills_list-1777963360670200400-13201"
+    },
+    {
+      "role": "tool",
+      "name": "search_files",
+      "content": "{\"total_count\": 3, \"files\": [\"./sync.sh\", \"./README.md\", \"./AGENTS.md\"]}",
+      "tool_call_id": "search_files-1777963360820256600-13202"
+    },
+    {
+      "role": "tool",
+      "name": "search_files",
+      "content": "{\"total_count\": 0, \"error\": \"Path not found: memory\"}",
+      "tool_call_id": "search_files-1777963360932588960-13203"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963365922791880-13204",
+          "call_id": "terminal-1777963365922791880-13204",
+          "response_item_id": "fc_terminal-1777963365922791880-13204",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls -R /\"}"
+          }
+        },
+        {
+          "id": "skill_view-1777963365923122560-13205",
+          "call_id": "skill_view-1777963365923122560-13205",
+          "response_item_id": "fc_skill_view-1777963365923122560-13205",
+          "type": "function",
+          "function": {
+            "name": "skill_view",
+            "arguments": "{\"name\": \"yuanbao\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"/:\\nbin\\nbin.usr-is-merged\\nboot\\ndev\\netc\\nhome\\nimagegeneration\\nlib\\nlib.usr-is-merged\\nlib32\\nlib64\\nlost+found\\nmedia\\nmnt\\nopt\\nproc\\nroot\\nrun\\nsbin\\nsbin.usr-is-merged\\nsnap\\nsrv\\nswapfile\\nsys\\ntmp\\nusr\\nvar\\n\\n/bin.usr-is-merged:\\n\\n/boot:\\nSystem.map-6.17.0-1010-azure\\nconfig-6.17.0-1010-azure\\nefi\\ngrub\\ninitrd.img\\ninitrd.img-6.17.0-1010-azure\\ninitrd.img.old\\nlost+found\\nvmlinuz\\nvmlinuz-6.17.0-1010-azure\\nvmlinuz.old\\nls: cannot open directory '/boot/efi': Permission denied\\n\\n/boot/grub:\\nfonts\\ngfxblacklist.txt\\ngrub.cfg\\ngrubenv\\ni386-pc\\nlocale\\nunicode.pf2\\nx86_64-efi\\n\\n/boot/grub/fonts:\\nunicode.pf2\\n\\n/boot/grub/i386-pc:\\n915resolution.mod\\nacpi.mod\\nadler32.mod\\naffs.mod\\nafs.mod\\nafsplitter.mod\\nahci.mod\\nall_video.mod\\naout.mod\\narchelp.mod\\nat_keyboard.mod\\nata.mod\\nbacktrace.mod\\nbfs.mod\\nbiosdisk.mod\\nbitmap.mod\\nbitmap_scale.mod\\nblocklist.mod\\nboot.img\\nboot.mod\\nbsd.mod\\nbswap_test.mod\\nbtrfs.mod\\nbufio.mod\\ncat.mod\\ncbfs.mod\\ncbls.mod\\ncbmemc.mod\\ncbtable.mod\\ncbtime.mod\\nchain.mod\\ncmdline_cat_test.mod\\ncmosdump.mod\\ncmostest.mod\\ncmp.mod\\ncmp_test.mod\\ncommand.lst\\nconfigfile.mod\\ncore.img\\ncpio.mod\\ncpio_be.mod\\ncpuid.mod\\ncrc64.mod\\ncrypto.lst\\ncrypto.mod\\ncryptodisk.mod\\ncs5536.mod\\nctz_test.mod\\ndate.mod\\ndatehook.mod\\ndatetime.mod\\ndisk.mod\\ndiskfilter.mod\\ndiv.mod\\ndiv_test.mod\\ndm_nv.mod\\ndrivemap.mod\\necho.mod\\nefiemu.mod\\nefiemu32.o\\nefiemu64.o\\nehci.mod\\nelf.mod\\neval.mod\\nexfat.mod\\nexfctest.mod\\next2.mod\\nextcmd.mod\\nf2fs.mod\\nfat.mod\\nfile.mod\\nfont.mod\\nfreedos.mod\\nfs.lst\\nfshelp.mod\\nfunctional_test.mod\\ngcry_arcfour.mod\\ngcry_blowfish.mod\\ngcry_camellia.mod\\ngcry_cast5.mod\\ngcry_crc.mod\\ngcry_des.mod\\ngcry_dsa.mod\\ngcry_idea.mod\\ngcry_md4.mod\\ngcry_md5.mod\\ngcry_rfc2268.mod\\ngcry_rijndael.mod\\ngcry_rmd160.mod\\ngcry_rsa.mod\\ngcry_seed.mod\\ngcry_serpent.mod\\ngcry_sha1.mod\\ngcry_sha256.mod\\ngcry_sha512.mod\\ngcry_tiger.mod\\ngcry_twofish.mod\\ngcry_whirlpool.mod\\ngdb.mod\\ngeli.mod\\ngettext.mod\\ngfxmenu.mod\\ngfxterm.mod\\ngfxterm_background.mod\\ngfxterm_menu.mod\\ngptsync.mod\\ngzio.mod\\nhalt.mod\\nhashsum.mod\\nhdparm.mod\\nhello.mod\\nhelp.mod\\nhexdump.mod\\nhfs.mod\\nhfsplus.mod\\nhfspluscomp.mod\\nhttp.mod\\nhwmatch.mod\\niorw.mod\\niso9660.mod\\njfs.mod\\njpeg.mod\\njson.mod\\nkeylayouts.mod\\nkeystatus.mod\\nldm.mod\\nlegacy_password_test.mod\\nlegacycfg.mod\\nlinux.mod\\nlinux16.mod\\nloadenv.mod\\nloopback.mod\\nls.mod\\nlsacpi.mod\\nlsapm.mod\\nlsmmap.mod\\nlspci.mod\\nluks.mod\\nluks2.mod\\nlvm.mod\\nlzopio.mod\\nmacbless.mod\\nmacho.mod\\nmda_text.mod\\nmdraid09.mod\\nmdraid09_be.mod\\nmdraid1x.mod\\nmemdisk.mod\\nmemrw.mod\\nminicmd.mod\\nminix.mod\\nminix2.mod\\nminix2_be.mod\\nminix3.mod\\nminix3_be.mod\\nminix_be.mod\\nmmap.mod\\nmoddep.lst\\nmodinfo.sh\\nmorse.mod\\nmpi.mod\\nmsdospart.mod\\nmul_test.mod\\nmultiboot.mod\\nmultiboot2.mod\\nnativedisk.mod\\nnet.mod\\nnewc.mod\\nnilfs2.mod\\nnormal.mod\\nntfs.mod\\nntfscomp.mod\\nntldr.mod\\nodc.mod\\noffsetio.mod\\nohci.mod\\npart_acorn.mod\\npart_amiga.mod\\npart_apple.mod\\npart_bsd.mod\\npart_dfly.mod\\npart_dvh.mod\\npart_gpt.mod\\npart_msdos.mod\\npart_plan.mod\\npart_sun.mod\\npart_sunpc.mod\\npartmap.lst\\nparttool.lst\\nparttool.mod\\npassword.mod\\npassword_pbkdf2.mod\\npata.mod\\npbkdf2.mod\\npbkdf2_test.mod\\npci.mod\\npcidump.mod\\npgp.mod\\nplainmount.mod\\nplan9.mod\\nplay.mod\\npng.mod\\npriority_queue.mod\\nprobe.mod\\nprocfs.mod\\nprogress.mod\\npxe.mod\\npxechain.mod\\nraid5rec.mod\\nraid6rec.mod\\nrandom.mod\\nrdmsr.mod\\nread.mod\\nreboot.mod\\nregexp.mod\\nreiserfs.mod\\nrelocator.mod\\nromfs.mod\\nscsi.mod\\nsearch.mod\\nsearch_fs_file.mod\\nsearch_fs_uuid.mod\\nsearch_label.mod\\nsendkey.mod\\nserial.mod\\nsetjmp.mod\\nsetjmp_test.mod\\nsetpci.mod\\nsfs.mod\\nshift_test.mod\\nsignature_test.mod\\nsleep.mod\\nsleep_test.mod\\nsmbios.mod\\nspkmodem.mod\\nsquash4.mod\\nstrtoull_test.mod\\nsyslinuxcfg.mod\\ntar.mod\\nterminal.lst\\nterminal.mod\\nterminfo.mod\\ntest.mod\\ntest_blockarg.mod\\ntestload.mod\\ntestspeed.mod\\ntftp.mod\\ntga.mod\\ntime.mod\\ntr.mod\\ntrig.mod\\ntrue.mod\\ntruecrypt.mod\\nudf.mod\\nufs1.mod\\nufs1_be.mod\\nufs2.mod\\nuhci.mod\\nusb.mod\\nusb_keyboard.mod\\nusbms.mod\\nusbserial_common.mod\\nusbserial_ftdi.mod\\nusbserial_pl2303.mod\\nusbserial_usbdebug.mod\\nusbtest.mod\\nvbe.mod\\nverifiers.mod\\nvga.mod\\nvga_text.mod\\nvideo.lst\\nvideo.mod\\nvideo_bochs.mod\\nvideo_cirrus.mod\\nvideo_colors.mod\\nvideo_fb.mod\\nvideoinfo.mod\\nvideotest.mod\\nvideotest_checksum.mod\\nwrmsr.mod\\nxfs.mod\\nxnu.mod\\nxnu_uuid.mod\\nxnu_uuid_test.mod\\nxzio.mod\\nzfs.mod\\nzfscrypt.mod\\nzfsinfo.mod\\nzstd.mod\\n\\n/boot/grub/locale:\\n\\n/boot/grub/x86_64-efi:\\nacpi.mod\\nadler32.mod\\naffs.mod\\nafs.mod\\nafsplitter.mod\\nahci.mod\\nall_video.mod\\naout.mod\\nappleldr.mod\\narchelp.mod\\nat_keyboard.mod\\nata.mod\\nbacktrace.mod\\nbfs.mod\\nbitmap.mod\\nbitmap_scale.mod\\nbli.mod\\nblocklist.mod\\nboot.mod\\nbsd.mod\\nbswap_test.mod\\nbtrfs.mod\\nbufio.mod\\ncat.mod\\ncbfs.mod\\ncbls.mod\\ncbmemc.mod\\ncbtable.mod\\ncbtime.mod\\nchain.mod\\ncmdline_cat_test.mod\\ncmp.mod\\ncmp_test.mod\\ncommand.lst\\nconfigfile.mod\\ncore.efi\\ncpio.mod\\ncpio_be.mod\\ncpuid.mod\\ncrc64.mod\\ncrypto.lst\\ncrypto.mod\\ncryptodisk.mod\\ncs5536.mod\\nctz_test.mod\\ndate.mod\\ndatehook.mod\\ndatetime.mod\\ndisk.mod\\ndiskfilter.mod\\ndiv.mod\\ndiv_test.mod\\ndm_nv.mod\\necho.mod\\nefi_gop.mod\\nefi_uga.mod\\nefifwsetup.mod\\nefinet.mod\\nefitextmode.mod\\nehci.mod\\nelf.mod\\neval.mod\\nexfat.mod\\nexfctest.mod\\next2.mod\\nextcmd.mod\\nf2fs.mod\\nfat.mod\\nfile.mod\\nfixvideo.mod\\nfont.mod\\nfs.lst\\nfshelp.mod\\nfunctional_test.mod\\ngcry_arcfour.mod\\ngcry_blowfish.mod\\ngcry_camellia.mod\\ngcry_cast5.mod\\ngcry_crc.mod\\ngcry_des.mod\\ngcry_dsa.mod\\ngcry_idea.mod\\ngcry_md4.mod\\ngcry_md5.mod\\ngcry_rfc2268.mod\\ngcry_rijndael.mod\\ngcry_rmd160.mod\\ngcry_rsa.mod\\ngcry_seed.mod\\ngcry_serpent.mod\\ngcry_sha1.mod\\ngcry_sha256.mod\\ngcry_sha512.mod\\ngcry_tiger.mod\\ngcry_twofish.mod\\ngcry_whirlpool.mod\\ngeli.mod\\ngettext.mod\\ngfxmenu.mod\\ngfxterm.mod\\ngfxterm_background.mod\\ngfxterm_menu.mod\\ngptsync.mod\\ngrub.efi\\ngzio.mod\\nhalt.mod\\nhashsum.mod\\nhdparm.mod\\nhello.mod\\nhelp.mod\\nhexdump.mod\\nhfs.mod\\nhfsplus.mod\\nhfspluscomp.mod\\nhttp.mod\\niorw.mod\\niso9660.mod\\njfs.mod\\njpeg.mod\\njson.mod\\nkeylayouts.mod\\nkeystatus.mod\\nldm.mod\\nlegacy_password_test.mod\\nlegacycfg.mod\\nlinux.mod\\nlinux16.mod\\nload.cfg\\nloadbios.mod\\nloadenv.mod\\nloopback.mod\\nls.mod\\nlsacpi.mod\\nlsefi.mod\\nlsefimmap.mod\\nlsefisystab.mod\\nlsmmap.mod\\nlspci.mod\\nlssal.mod\\nluks.mod\\nluks2.mod\\nlvm.mod\\nlzopio.mod\\nmacbless.mod\\nmacho.mod\\nmdraid09.mod\\nmdraid09_be.mod\\nmdraid1x.mod\\nmemdisk.mod\\nmemrw.mod\\nminicmd.mod\\nminix.mod\\nminix2.mod\\nminix2_be.mod\\nminix3.mod\\nminix3_be.mod\\nminix_be.mod\\nmmap.mod\\nmoddep.lst\\nmodinfo.sh\\nmorse.mod\\nmpi.mod\\nmsdospart.mod\\nmul_test.mod\\nmultiboot.mod\\nmultiboot2.mod\\nnativedisk.mod\\nnet.mod\\nnewc.mod\\nnilfs2.mod\\nnormal.mod\\nntfs.mod\\nntfscomp.mod\\nodc.mod\\noffsetio.mod\\nohci.mod\\npart_acorn.mod\\npart_amiga.mod\\npart_apple.mod\\npart_bsd.mod\\npart_dfly.mod\\npart_dvh.mod\\npart_gpt.mod\\npart_msdos.mod\\npart_plan.mod\\npart_sun.mod\\npart_sunpc.mod\\npartmap.lst\\nparttool.lst\\nparttool.mod\\npassword.mod\\npassword_pbkdf2.mod\\npata.mod\\npbkdf2.mod\\npbkdf2_test.mod\\npcidump.mod\\npeimage.mod\\npgp.mod\\nplainmount.mod\\nplay.mod\\npng.mod\\npriority_queue.mod\\nprobe.mod\\nprocfs.mod\\nprogress.mod\\nraid5rec.mod\\nraid6rec.mod\\nrandom.mod\\nrdmsr.mod\\nread.mod\\nreboot.mod\\nregexp.mod\\nreiserfs.mod\\nrelocator.mod\\nromfs.mod\\nscsi.mod\\nsearch.mod\\nsearch_fs_file.mod\\nsearch_fs_uuid.mod\\nsearch_label.mod\\nserial.mod\\nsetjmp.mod\\nsetjmp_test.mod\\nsetpci.mod\\nsfs.mod\\nshift_test.mod\\nsignature_test.mod\\nsleep.mod\\nsleep_test.mod\\nsmbios.mod\\nspkmodem.mod\\nsquash4.mod\\nstrtoull_test.mod\\nsyslinuxcfg.mod\\ntar.mod\\nterminal.lst\\nterminal.mod\\nterminfo.mod\\ntest.mod\\ntest_blockarg.mod\\ntestload.mod\\ntestspeed.mod\\ntftp.mod\\ntga.mod\\ntime.mod\\ntpm.mod\\ntr.mod\\ntrig.mod\\ntrue.mod\\nudf.mod\\nufs1.mod\\nufs1_be.mod\\nufs2.mod\\nuhci.mod\\nusb.mod\\nusb_keyboard.mod\\nusbms.mod\\nusbserial_common.mod\\nusbserial_ftdi.mod\\nusbserial_pl2303.mod\\nusbserial_usbdebug.mod\\nusbtest.mod\\nvideo.lst\\nvideo.mod\\nvideo_bochs.mod\\nvideo_cirrus.mod\\nvideo_colors.mod\\nvideo_fb.mod\\nvideoinfo.mod\\nvideotest.mod\\nvideotest_checksum.mod\\nwrmsr.mod\\nxfs.mod\\nxnu.mod\\nxnu_uuid.mod\\nxnu_uuid_test.mod\\nxzio.mod\\nzfs.mod\\nzfscrypt.mod\\nzfsinfo.mod\\nzstd.mod\\nls: cannot open directory '/boot/lost+found': Permission denied\\n\\n/dev:\\nautofs\\nblock\\nbsg\\nbtrfs-control\\nchar\\nconsole\\ncore\\ncpu\\ncpu_dma_latency\\ncuse\\ndisk\\ndma_heap\\ndri\\necryptfs\\nfb0\\nfd\\nfull\\nfuse\\nhpet\\nhugepages\\nhwrng\\ninfiniband\\ninitctl\\ninput\\nkmsg\\nkvm\\nlog\\nloop-control\\nloop0\\nloop1\\nloop2\\nloop3\\nloop4\\nloop5\\nloop6\\nloop7\\nmapper\\nmcelog\\nmem\\nmqueue\\nnet\\nnull\\nnvme-fabrics\\nnvram\\nport\\nppp\\npsaux\\nptmx\\nptp0\\nptp1\\nptp_hyperv\\npts\\nrandom\\nrfkill\\nroot\\nrtc\\nrtc0\\nsda\\nsda1\\nsda14\\nsda15\\nsda16\\nsg0\\nshm\\nsnapshot\\nstderr\\nstdin\\nstdout\\ntty\\ntty0\\ntty1\\ntty10\\ntty11\\ntty12\\ntty13\\ntty14\\ntty15\\ntty16\\ntty17\\ntty18\\ntty19\\ntty2\\ntty20\\ntty21\\ntty22\\ntty23\\ntty24\\ntty25\\ntty26\\ntty27\\ntty28\\ntty29\\ntty3\\ntty30\\ntty31\\ntty32\\ntty33\\ntty34\\ntty35\\ntty36\\ntty37\\ntty38\\ntty39\\ntty4\\ntty40\\ntty41\\ntty42\\ntty43\\ntty44\\ntty45\\ntty46\\ntty47\\ntty48\\ntty49\\ntty5\\ntty50\\ntty51\\ntty52\\ntty53\\ntty54\\ntty55\\ntty56\\ntty57\\ntty58\\ntty59\\ntty6\\ntty60\\ntty61\\ntty62\\ntty63\\ntty7\\ntty8\\ntty9\\nttyS0\\nttyS1\\nttyS10\\nttyS11\\nttyS12\\nttyS13\\nttyS14\\nttyS15\\nttyS16\\nttyS17\\nttyS18\\nttyS19\\nttyS2\\nttyS20\\nttyS21\\nttyS22\\nttyS23\\nttyS24\\nttyS25\\nttyS26\\nttyS27\\nttyS28\\nttyS29\\nttyS3\\nttyS30\\nttyS31\\nttyS4\\nttyS5\\nttyS6\\nttyS7\\nttyS8\\nttyS9\\nttyprintk\\nudmabuf\\nuinput\\nurandom\\nuserfaultfd\\nvcs\\nvcs1\\nvcs2\\nvcs3\\nvcs4\\nvcs5\\nvcs6\\nvcsa\\nvcsa1\\nvcsa2\\nvcsa3\\nvcsa4\\nvcsa5\\nvcsa6\\nvcsu\\nvcsu1\\nvcsu2\\nvcsu3\\nvcsu4\\nvcsu5\\nvcsu6\\nvfio\\nvga_arbiter\\nvhost-net\\nvhost-vsock\\nvmbus\\nzero\\nzfs\\n\\n/dev/block:\\n259:0\\n7:0\\n7:1\\n7:2\\n7:3\\n7:4\\n7:5\\n7:6\\n7:7\\n8:0\\n8:1\\n8:14\\n8:15\\n\\n/dev/bsg:\\n0:0:0:0\\n\\n/dev/char:\\n108:0\\n10:1\\n10:183\\n10:200\\n10:223\\n10:227\\n10:228\\n10:229\\n10:231\\n10:232\\n10:235\\n10:236\\n10:237\\n10:242\\n10:256\\n10:257\\n10:258\\n10:259\\n10:260\\n10:261\\n10:262\\n13:0\\n13:32\\n13:63\\n13:64\\n13:65\\n1:1\\n1:11\\n1:3\\n1:4\\n1:5\\n1:7\\n1:8\\n1:9\\n202:0\\n202:1\\n202:2\\n202:3\\n21:0\\n226:1\\n231:192\\n243:0\\n245:0\\n245:1\\n247:0\\n248:0\\n29:0\\n4:0\\n4:1\\n4:10\\n4:11\\n4:12\\n4:13\\n4:14\\n4:15\\n4:16\\n4:17\\n4:18\\n4:19\\n4:2\\n4:20\\n4:21\\n4:22\\n4:23\\n4:24\\n4:25\\n4:26\\n4:27\\n4:28\\n4:29\\n4:3\\n4:30\\n4:31\\n4:32\\n4:33\\n4:34\\n4:35\\n4:36\\n4:37\\n4:38\\n4:39\\n4:4\\n4:40\\n4:41\\n4:42\\n4:43\\n4:44\\n4:45\\n4:46\\n4:47\\n4:48\\n4:49\\n4:5\\n4:50\\n4:51\\n4:52\\n4:53\\n4:54\\n4:55\\n4:56\\n4:57\\n4:58\\n4:59\\n4:6\\n4:60\\n4:61\\n4:62\\n4:63\\n4:64\\n4:65\\n4:66\\n4:67\\n4:68\\n4:69\\n4:7\\n4:70\\n4:71\\n4:72\\n4:73\\n4:74\\n4:75\\n4:76\\n4:77\\n4:78\\n4:79\\n4:8\\n4:80\\n4:81\\n4:82\\n4:83\\n4:84\\n4:85\\n4:86\\n4:87\\n4:88\\n4:89\\n4:9\\n4:90\\n4:91\\n4:92\\n4:93\\n4:94\\n4:95\\n5:0\\n5:1\\n5:2\\n5:3\\n7:0\\n7:1\\n7:128\\n7:129\\n7:130\\n7:131\\n7:132\\n7:133\\n7:134\\n7:2\\n7:3\\n7:4\\n7:5\\n7:6\\n7:64\\n7:65\\n7:66\\n7:67\\n7:68\\n7:69\\n7:70\\n\\n/dev/cpu:\\n0\\n1\\n2\\n3\\n\\n/dev/cpu/0:\\nmsr\\n\\n/dev/cpu/1:\\nmsr\\n\\n/dev/cpu/2:\\nmsr\\n\\n/dev/cpu/3:\\nmsr\\n\\n/dev/disk:\\nazure\\nby-diskseq\\nby-id\\nby-label\\nby-partuuid\\nby-path\\nby-uuid\\ncloud\\n\\n/dev/disk/azure:\\nos\\nos-part1\\nos-part14\\nos-part15\\nos-part16\\nroot\\nroot-part1\\nroot-part14\\nroot-part15\\nroot-part16\\n\\n/dev/disk/by-diskseq:\\n10\\n2\\n3\\n4\\n5\\n6\\n7\\n8\\n9\\n9-part1\\n9-part14\\n9-part15\\n9-part16\\n\\n/dev/disk/by-id:\\nscsi-14d53465420202020dce77d9f365ecd4094430510f2f83e6d\\nscsi-14d53465420202020dce77d9f365ecd4094430510f2f83e6d-part1\\nscsi-14d53465420202020dce77d9f365ecd4094430510f2f83e6d-part14\\nscsi-14d53465420202020dce77d9f365ecd4094430510f2f83e6d-part15\\nscsi-14d53465420202020dce77d9f365ecd4094430510f2f83e6d-part16\\nscsi-360022480dce77d9f365e0510f2f83e6d\\nscsi-360022480dce77d9f365e0510f2f83e6d-part1\\nscsi-360022480dce77d9f365e0510f2f83e6d-part14\\nscsi-360022480dce77d9f365e0510f2f83e6d-part15\\nscsi-360022480dce77d9f365e0510f2f83e6d-part16\\nwwn-0x60022480dce77d9f365e0510f2f83e6d\\nwwn-0x60022480dce77d9f365e0510f2f83e6d-part1\\nwwn-0x60022480dce77d9f365e0510f2f83e6d-part14\\nwwn-0x60022480dce77d9f365e0510f2f83e6d-part15\\nwwn-0x60022480dce77d9f365e0510f2f83e6d-part16\\n\\n/dev/disk/by-label:\\nBOOT\\nUEFI\\ncloudimg-rootfs\\n\\n/dev/disk/by-partuuid:\\n054c3354-42bf-4a6d-8c6f-2cf42bd83e63\\n5667a42e-8684-4ba1-9ee4-a1d43ada115b\\n5762f738-5f39-48c2-b971-11ad06acbb46\\ne75b061d-520b-41c0-9547-9cf47a7a6244\\n\\n/dev/disk/by-path:\\nacpi-MSFT1000:00-scsi-0:0:0:0\\nacpi-MSFT1000:00-scsi-0:0:0:0-part1\\nacpi-MSFT1000:00-scsi-0:0:0:0-part14\\nacpi-MSFT1000:00-scsi-0:0:0:0-part15\\nacpi-MSFT1000:00-scsi-0:0:0:0-part16\\n\\n/dev/disk/by-uuid:\\n4bf66719-664b-47ad-b957-c15ad7d45441\\n822e1863-9256-4ccd-9104-ffffb1fd93b0\\n9976-7892\\n\\n/dev/disk/cloud:\\nazure_root\\nazure_root-part1\\nazure_root-part14\\nazure_root-part15\\nazure_root-part16\\n\\n/dev/dma_heap:\\nsystem\\n\\n/dev/dri:\\ncard1\\n\\n/dev/hugepages:\\n\\n/dev/infiniband:\\nby-ibdev\\nby-path\\nuverbs0\\n\\n/dev/infiniband/by-ibdev:\\nuverbs-mlx5_0\\n\\n/dev/infiniband/by-path:\\nacpi-MSFT1000:00-pci-621d:00:02.0\\n\\n/dev/input:\\nby-path\\nevent0\\nevent1\\njs0\\nmice\\nmouse0\\n\\n/dev/input/by-path:\\nacpi-MSFT1000:00-serio-0-event-kbd\\n\\n/dev/mapper:\\ncontrol\\n\\n/dev/mqueue:\\n\\n/dev/net:\\ntun\\n\\n/dev/pts:\\nptmx\\n\\n/dev/shm:\\nlibpod_lock\\n\\n/dev/vfio:\\nvfio\\n\\n/dev/vmbus:\\nhv_kvp\\n\\n/etc:\\nImageMagick-6\\nModemManager\\nPackageKit\\nX11\\nadduser.conf\\nalternatives\\napache2\\napparmor\\napparmor.d\\napport\\napt\\nbash.bashrc\\nbash_completion\\nbash_completion.d\\nbindresvport.blacklist\\nbinfmt.d\\nbyobu\\nca-certificates\\nca-certificates.conf\\nchrony\\ncifs-utils\\ncloud\\ncni\\nconsole-setup\\ncontainerd\\ncontainers\\ncredstore\\ncredstore.encrypted\\ncron.d\\ncron.daily\\ncron.hourly\\ncron.monthly\\ncron.weekly\\ncron.yearly\\ncrontab\\ncryptsetup-initramfs\\ncrypttab\\ndbus-1\\ndconf\\ndebconf.conf\\ndebian_version\\ndebsig\\ndefault\\ndeluser.conf\\ndepmod.d\\ndhcp\\ndhcpcd.conf\\ndictionaries-common\\ndocker\\ndpkg\\ne2scrub.conf\\nec2_version\\nemacs\\nenvironment\\nethertypes\\nfirebird\\nfirefox\\nfonts\\nfreetds\\nfstab\\nfuse.conf\\nfwupd\\ngai.conf\\ngitconfig\\ngnutls\\ngprofng.rc\\ngroff\\ngroup\\ngroup-\\ngrub.d\\ngshadow\\ngshadow-\\ngss\\ngtk-3.0\\nhdparm.conf\\nhost.conf\\nhostname\\nhosts\\nhosts.allow\\nhosts.deny\\ninit\\ninit.d\\ninitramfs-tools\\ninputrc\\niproute2\\niscsi\\nissue\\nissue.net\\nkernel\\nkeyutils\\nlandscape\\nld.so.cache\\nld.so.conf\\nld.so.conf.d\\nldap\\nlegal\\nlibaudit.conf\\nlibblockdev\\nlibibverbs.d\\nlibnl-3\\nlighttpd\\nlocale.alias\\nlocale.conf\\nlocale.gen\\nlocaltime\\nlogcheck\\nlogin.defs\\nlogrotate.conf\\nlogrotate.d\\nlsb-release\\nlvm\\nmachine-id\\nmagic\\nmagic.mime\\nmanpath.config\\nmdadm\\nmecabrc\\nmercurial\\nmime.types\\nmke2fs.conf\\nmodprobe.d\\nmodules\\nmodules-load.d\\nmtab\\nmultipath\\nmultipath.conf\\nmysql\\nnanorc\\nneedrestart\\nnetconfig\\nnetplan\\nnetwork\\nnetworkd-dispatcher\\nnetworks\\nnewt\\nnftables.conf\\nnginx\\nnsswitch.conf\\nnvme\\nopt\\nos-release\\noverlayroot.conf\\noverlayroot.local.conf\\npam.conf\\npam.d\\npasswd\\npasswd-\\nperl\\nphp\\npip.conf\\npki\\nplymouth\\npm\\npolkit-1\\npollinate\\npostgresql\\npostgresql-common\\nppp\\nprofile\\nprofile.d\\nprotocols\\npython3\\npython3.12\\nrc0.d\\nrc1.d\\nrc2.d\\nrc3.d\\nrc4.d\\nrc5.d\\nrc6.d\\nrcS.d\\nrequest-key.conf\\nrequest-key.d\\nresolv.conf\\nrmt\\nrpc\\nrsyslog.conf\\nrsyslog.d\\nscreenrc\\nsecurity\\nselinux\\nsensors.d\\nsensors3.conf\\nservices\\nsgml\\nshadow\\nshadow-\\nshells\\nskel\\nsnmp\\nsos\\nsphinxsearch\\nssh\\nssl\\nsubgid\\nsubgid-\\nsubuid\\nsubuid-\\nsudo.conf\\nsudo_logsrvd.conf\\nsudoers\\nsudoers.d\\nsupercat\\nsysctl.conf\\nsysctl.d\\nsysstat\\nsystemd\\nterminfo\\ntexmf\\ntimezone\\ntmpfiles.d\\nubuntu-advantage\\nucf.conf\\nudev\\nudisks2\\nufw\\nupdate-manager\\nupdate-motd.d\\nupdate-notifier\\nusb_modeswitch.conf\\nusb_modeswitch.d\\nvconsole.conf\\nvim\\nvmware-tools\\nvtrgb\\nvulkan\\nwaagent.conf\\nwgetrc\\nxattr.conf\\nxdg\\nxml\\nzsh_command_not_found\\n\\n/etc/ImageMagick-6:\\ncoder.xml\\ncolors.xml\\ndelegates.xml\\nlog.xml\\nmagic.xml\\nmime.xml\\npolicy-debian.xml\\npolicy-limited.xml\\npolicy-open.xml\\npolicy-secure.xml\\npolicy-websafe.xml\\npolicy.xml\\nquantization-table.xml\\nthresholds.xml\\ntype-apple.xml\\ntype-dejavu.xml\\ntype-ghostscript.xml\\ntype-urw-base35.xml\\ntype-windows.xml\\ntype.xml\\n\\n/etc/ModemManager:\\nconnection.d\\nfcc-unlock.d\\n\\n/etc/ModemManager/connection.d:\\n\\n/etc/ModemManager/fcc-unlock.d:\\n\\n/etc/PackageKit:\\nPackageKit.conf\\nVendor.conf\\n\\n/etc/X11:\\nXreset\\nXreset.d\\nXresources\\nXsession\\nXsession.d\\nXsession.options\\nrgb.txt\\nxkb\\nxorg.conf.d\\n\\n/etc/X11/Xreset.d:\\nREADME\\n\\n/etc/X11/Xresources:\\nx11-common\\n\\n/etc/X11/Xsession.d:\\n20dbus_xdg-runtime\\n20x11-common_process-args\\n30x11-common_xresources\\n35x11-common_xhost-local\\n40x11-common_xsessionrc\\n50x11-common_determine-startup\\n60x11-common_xdg_path\\n90gpg-agent\\n90x11-common_ssh-agent\\n99x11-common_start\\n\\n/etc/X11/xkb:\\n\\n/etc/X11/xorg.conf.d:\\n\\n/etc/alternatives:\\nABORT.7.gz\\nALTER_AGGREGATE.7.gz\\nALTER_COLLATION.7.gz\\nALTER_CONVERSION.7.gz\\nALTER_DATABASE.7.gz\\nALTER_DEFAULT_PRIVILEGES.7.gz\\nALTER_DOMAIN.7.gz\\nALTER_EVENT_TRIGGER.7.gz\\nALTER_EXTENSION.7.gz\\nALTER_FOREIGN_DATA_WRAPPER.7.gz\\nALTER_FOREIGN_TABLE.7.gz\\nALTER_FUNCTION.7.gz\\nALTER_GROUP.7.gz\\nALTER_INDEX.7.gz\\nALTER_LANGUAGE.7.gz\\nALTER_LARGE_OBJECT.7.gz\\nALTER_MATERIALIZED_VIEW.7.gz\\nALTER_OPERATOR.7.gz\\nALTER_OPERATOR_CLASS.7.gz\\nALTER_OPERATOR_FAMILY.7.gz\\nALTER_POLICY.7.gz\\nALTER_PROCEDURE.7.gz\\nALTER_PUBLICATION.7.gz\\nALTER_ROLE.7.gz\\nALTER_ROUTINE.7.gz\\nALTER_RULE.7.gz\\nALTER_SCHEMA.7.gz\\nALTER_SEQUENCE.7.gz\\nALTER_SERVER.7.gz\\nALTER_STATISTICS.7.gz\\nALTER_SUBSCRIPTION.7.gz\\nALTER_SYSTEM.7.gz\\nALTER_TABLE.7.gz\\nALTER_TABLESPACE.7.gz\\nALTER_TEXT_SEARCH_CONFIGURATION.7.gz\\nALTER_TEXT_SEARCH_DICTIONARY.7.gz\\nALTER_TEXT_SEARCH_PARSER.7.gz\\nALTER_TEXT_SEARCH_TEMPLATE.7.gz\\nALTER_TRIGGER.7.gz\\nALTER_TYPE.7.gz\\nALTER_USER.7.gz\\nALTER_USER_MAPPING.7.gz\\nALTER_VIEW.7.gz\\nANALYZE.7.gz\\nBEGIN.7.gz\\nCALL.7.gz\\nCHECKPOINT.7.gz\\nCLOSE.7.gz\\nCLUSTER.7.gz\\nCOMMENT.7.gz\\nCOMMIT.7.gz\\nCOMMIT_PREPARED.7.gz\\nCOPY.7.gz\\nCREATE_ACCESS_METHOD.7.gz\\nCREATE_AGGREGATE.7.gz\\nCREATE_CAST.7.gz\\nCREATE_COLLATION.7.gz\\nCREATE_CONVERSION.7.gz\\nCREATE_DATABASE.7.gz\\nCREATE_DOMAIN.7.gz\\nCREATE_EVENT_TRIGGER.7.gz\\nCREATE_EXTENSION.7.gz\\nCREATE_FOREIGN_DATA_WRAPPER.7.gz\\nCREATE_FOREIGN_TABLE.7.gz\\nCREATE_FUNCTION.7.gz\\nCREATE_GROUP.7.gz\\nCREATE_INDEX.7.gz\\nCREATE_LANGUAGE.7.gz\\nCREATE_MATERIALIZED_VIEW.7.gz\\nCREATE_OPERATOR.7.gz\\nCREATE_OPERATOR_CLASS.7.gz\\nCREATE_OPERATOR_FAMILY.7.gz\\nCREATE_POLICY.7.gz\\nCREATE_PROCEDURE.7.gz\\nCREATE_PUBLICATION.7.gz\\nCREATE_ROLE.7.gz\\nCREATE_RULE.7.gz\\nCREATE_SCHEMA.7.gz\\nCREATE_SEQUENCE.7.gz\\nCREATE_SERVER.7.gz\\nCREATE_STATISTICS.7.gz\\nCREATE_SUBSCRIPTION.7.gz\\nCREATE_TABLE.7.gz\\nCREATE_TABLESPACE.7.gz\\nCREATE_TABLE_AS.7.gz\\nCREATE_TEXT_SEARCH_CONFIGURATION.7.gz\\nCREATE_TEXT_SEARCH_DICTIONARY.7.gz\\nCREATE_TEXT_SEARCH_PARSER.7.gz\\nCREATE_TEXT_SEARCH_TEMPLATE.7.gz\\nCREATE_TRANSFORM.7.gz\\nCREATE_TRIGGER.7.gz\\nCREATE_TYPE.7.gz\\nCREATE_USER.7.gz\\nCREATE_USER_MAPPING.7.gz\\nCREATE_VIEW.7.gz\\nDEALLOCATE.7.gz\\nDECLARE.7.gz\\nDELETE.7.gz\\nDISCARD.7.gz\\nDO.7.gz\\nDROP_ACCESS_METHOD.7.gz\\nDROP_AGGREGATE.7.gz\\nDROP_CAST.7.gz\\nDROP_COLLATION.7.gz\\nDROP_CONVERSION.7.gz\\nDROP_DATABASE.7.gz\\nDROP_DOMAIN.7.gz\\nDROP_EVENT_TRIGGER.7.gz\\nDROP_EXTENSION.7.gz\\nDROP_FOREIGN_DATA_WRAPPER.7.gz\\nDROP_FOREIGN_TABLE.7.gz\\nDROP_FUNCTION.7.gz\\nDROP_GROUP.7.gz\\nDROP_INDEX.7.gz\\nDROP_LANGUAGE.7.gz\\nDROP_MATERIALIZED_VIEW.7.gz\\nDROP_OPERATOR.7.gz\\nDROP_OPERATOR_CLASS.7.gz\\nDROP_OPERATOR_FAMILY.7.gz\\nDROP_OWNED.7.gz\\nDROP_POLICY.7.gz\\nDROP_PROCEDURE.7.gz\\nDROP_PUBLICATION.7.gz\\nDROP_ROLE.7.gz\\nDROP_ROUTINE.7.gz\\nDROP_RULE.7.gz\\nDROP_SCHEMA.7.gz\\nDROP_SEQUENCE.7.gz\\nDROP_SERVER.7.gz\\nDROP_STATISTICS.7.gz\\nDROP_SUBSCRIPTION.7.gz\\nDROP_TABLE.7.gz\\nDROP_TABLESPACE.7.gz\\nDROP_TEXT_SEARCH_CONFIGURATION.7.gz\\nDROP_TEXT_SEARCH_DICTIONARY.7.gz\\nDROP_TEXT_SEARCH_PARSER.7.gz\\nDROP_TEXT_SEARCH_TEMPLATE.7.gz\\nDROP_TRANSFORM.7.gz\\nDROP_TRIGGER.7.gz\\nDROP_TYPE.7.gz\\nDROP_USER.7.gz\\nDROP_USER_MAPPING.7.gz\\nDROP_VIEW.7.gz\\nEND.7.gz\\nEXECUTE.7.gz\\nEXPLAIN.7.gz\\nFETCH.7.gz\\nGRANT.7.gz\\nIMPORT_FOREIGN_SCHEMA.7.gz\\nINSERT.7.gz\\nLISTEN.7.gz\\nLOAD.7.gz\\nLOCK.7.gz\\nMERGE.7.gz\\nMOVE.7.gz\\nNOTIFY.7.gz\\nPREPARE.7.gz\\nPREPARE_TRANSACTION.7.gz\\nREADME\\nREASSIGN_OWNED.7.gz\\nREFRESH_MATERIALIZED_VIEW.7.gz\\nREINDEX.7.gz\\nRELEASE_SAVEPOINT.7.gz\\nRESET.7.gz\\nREVOKE.7.gz\\nROLLBACK.7.gz\\nROLLBACK_PREPARED.7.gz\\nROLLBACK_TO_SAVEPOINT.7.gz\\nSAVEPOINT.7.gz\\nSECURITY_LABEL.7.gz\\nSELECT.7.gz\\nSELECT_INTO.7.gz\\nSET.7.gz\\nSET_CONSTRAINTS.7.gz\\nSET_ROLE.7.gz\\nSET_SESSION_AUTHORIZATION.7.gz\\nSET_TRANSACTION.7.gz\\nSHOW.7.gz\\nSTART_TRANSACTION.7.gz\\nTABLE.7.gz\\nTRUNCATE.7.gz\\nUNLISTEN.7.gz\\nUPDATE.7.gz\\nVACUUM.7.gz\\nVALUES.7.gz\\nWITH.7.gz\\naclocal\\naclocal.1.gz\\nappletviewer\\nappletviewer.1\\narptables\\narptables-restore\\narptables-save\\nautomake\\nautomake.1.gz\\nawk\\nawk.1.gz\\nbuiltins.7.gz\\nc++\\nc++.1.gz\\nc89\\nc89.1.gz\\nc99\\nc99.1.gz\\ncc\\ncc.1.gz\\nclang\\nclang++\\nclang-format\\nclang-tidy\\nclhsdb\\nclusterdb.1.gz\\ncpp\\ncreatedb.1.gz\\ncreateuser.1.gz\\ndropdb.1.gz\\ndropuser.1.gz\\nebtables\\nebtables-restore\\nebtables-save\\neditor\\neditor.1.gz\\nex\\nex.1.gz\\nex.da.1.gz\\nex.de.1.gz\\nex.fr.1.gz\\nex.it.1.gz\\nex.ja.1.gz\\nex.pl.1.gz\\nex.ru.1.gz\\nex.tr.1.gz\\nextcheck\\nextcheck.1\\nf77\\nf95\\nfaked.1.gz\\nfaked.es.1.gz\\nfaked.fr.1.gz\\nfaked.sv.1.gz\\nfakeroot\\nfakeroot.1.gz\\nfakeroot.es.1.gz\\nfakeroot.fr.1.gz\\nfakeroot.sv.1.gz\\nftp\\nftp.1.gz\\ngnome-www-browser\\ngoogle-chrome\\nhsdb\\nidlj\\nidlj.1\\nidmap-plugin\\nidmap-plugin.8.gz\\ninfobrowser\\ninfobrowser.1.gz\\ninitdb.1.gz\\nip6tables\\nip6tables-restore\\nip6tables-save\\niptables\\niptables-restore\\niptables-save\\njaotc\\njar\\njar.1\\njarsigner\\njarsigner.1\\njava\\njava.1\\njavac\\njavac.1\\njavadoc\\njavadoc.1\\njavah\\njavah.1\\njavap\\njavap.1\\njcmd\\njcmd.1\\njconsole\\njconsole.1\\njdb\\njdb.1\\njdeprscan\\njdeprscan.1\\njdeps\\njdeps.1\\njexec\\njfr\\njfr.1\\njhat\\njhat.1\\njhsdb\\njhsdb.1\\njimage\\njinfo\\njinfo.1\\njjs\\njjs.1\\njlink\\njlink.1\\njmap\\njmap\\n\\n... [OUTPUT TRUNCATED - 23203463 chars omitted out of 23253463 total] ...\\n\\n_23_mtrl.png\\nic_media_route_connecting_dark_24_mtrl.png\\nic_media_route_connecting_dark_25_mtrl.png\\nic_media_route_connecting_dark_26_mtrl.png\\nic_media_route_connecting_dark_27_mtrl.png\\nic_media_route_connecting_dark_28_mtrl.png\\nic_media_route_connecting_dark_29_mtrl.png\\nic_media_route_connecting_dark_30_mtrl.png\\nic_media_route_connecting_light_00_mtrl.png\\nic_media_route_connecting_light_01_mtrl.png\\nic_media_route_connecting_light_02_mtrl.png\\nic_media_route_connecting_light_03_mtrl.png\\nic_media_route_connecting_light_04_mtrl.png\\nic_media_route_connecting_light_05_mtrl.png\\nic_media_route_connecting_light_06_mtrl.png\\nic_media_route_connecting_light_07_mtrl.png\\nic_media_route_connecting_light_08_mtrl.png\\nic_media_route_connecting_light_09_mtrl.png\\nic_media_route_connecting_light_10_mtrl.png\\nic_media_route_connecting_light_11_mtrl.png\\nic_media_route_connecting_light_12_mtrl.png\\nic_media_route_connecting_light_13_mtrl.png\\nic_media_route_connecting_light_14_mtrl.png\\nic_media_route_connecting_light_15_mtrl.png\\nic_media_route_connecting_light_16_mtrl.png\\nic_media_route_connecting_light_17_mtrl.png\\nic_media_route_connecting_light_18_mtrl.png\\nic_media_route_connecting_light_19_mtrl.png\\nic_media_route_connecting_light_20_mtrl.png\\nic_media_route_connecting_light_21_mtrl.png\\nic_media_route_connecting_light_22_mtrl.png\\nic_media_route_connecting_light_23_mtrl.png\\nic_media_route_connecting_light_24_mtrl.png\\nic_media_route_connecting_light_25_mtrl.png\\nic_media_route_connecting_light_26_mtrl.png\\nic_media_route_connecting_light_27_mtrl.png\\nic_media_route_connecting_light_28_mtrl.png\\nic_media_route_connecting_light_29_mtrl.png\\nic_media_route_connecting_light_30_mtrl.png\\nic_menu_search_mtrl_alpha.png\\nic_sim_card_multi_24px_clr.png\\nic_sim_card_multi_48px_clr.png\\nic_star_black_16dp.png\\nic_star_black_36dp.png\\nic_star_black_48dp.png\\nic_star_half_black_16dp.png\\nic_star_half_black_36dp.png\\nic_star_half_black_48dp.png\\nperm_group_accessibility_features.png\\nperm_group_affects_battery.png\\nperm_group_app_info.png\\nperm_group_audio_settings.png\\nperm_group_bluetooth.png\\nperm_group_bookmarks.png\\nperm_group_device_alarms.png\\nperm_group_display.png\\nperm_group_network.png\\nperm_group_personal_info.png\\nperm_group_screenlock.png\\nperm_group_shortrange_network.png\\nperm_group_status_bar.png\\nperm_group_sync_settings.png\\nperm_group_system_clock.png\\nperm_group_system_tools.png\\nperm_group_voicemail.png\\nperm_group_wallpaper.png\\ntab_indicator_mtrl_alpha.9.png\\ntext_select_handle_left_mtrl_alpha.png\\ntext_select_handle_right_mtrl_alpha.png\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/interpolator:\\naccelerate_cubic.xml\\naccelerate_decelerate.xml\\naccelerate_quad.xml\\naccelerate_quart.xml\\naccelerate_quint.xml\\nactivity_close_dim.xml\\naggressive_ease.xml\\nanticipate.xml\\nanticipate_overshoot.xml\\nbounce.xml\\nbtn_checkbox_checked_mtrl_animation_interpolator_0.xml\\nbtn_checkbox_checked_mtrl_animation_interpolator_1.xml\\nbtn_checkbox_unchecked_mtrl_animation_interpolator_0.xml\\nbtn_checkbox_unchecked_mtrl_animation_interpolator_1.xml\\nbtn_radio_to_off_mtrl_animation_interpolator_0.xml\\nbtn_radio_to_on_mtrl_animation_interpolator_0.xml\\ncycle.xml\\ndecelerate_cubic.xml\\ndecelerate_quad.xml\\ndecelerate_quart.xml\\ndecelerate_quint.xml\\nemphasized.xml\\nemphasized_accelerate.xml\\nemphasized_decelerate.xml\\nfast_out_extra_slow_in.xml\\nfast_out_linear_in.xml\\nfast_out_slow_in.xml\\nft_avd_toarrow_animation_interpolator_0.xml\\nft_avd_toarrow_animation_interpolator_1.xml\\nft_avd_toarrow_animation_interpolator_2.xml\\nft_avd_toarrow_animation_interpolator_3.xml\\nft_avd_toarrow_animation_interpolator_4.xml\\nft_avd_toarrow_animation_interpolator_5.xml\\nft_avd_toarrow_animation_interpolator_6.xml\\nlaunch_task_behind_source_scale_1.xml\\nlaunch_task_behind_source_scale_2.xml\\nlaunch_task_behind_target_ydelta.xml\\nlaunch_task_micro_alpha.xml\\nlaunch_task_micro_ydelta.xml\\nlinear.xml\\nlinear_out_slow_in.xml\\novershoot.xml\\nprogress_indeterminate_horizontal_rect1_scalex.xml\\nprogress_indeterminate_horizontal_rect1_translatex.xml\\nprogress_indeterminate_horizontal_rect2_scalex.xml\\nprogress_indeterminate_horizontal_rect2_translatex.xml\\nscreen_rotation.xml\\nscreen_rotation_alpha_in.xml\\nscreen_rotation_alpha_out.xml\\nstandard.xml\\nstandard_accelerate.xml\\nstandard_decelerate.xml\\ntransient_interpolator.xml\\ntrim_end_interpolator.xml\\ntrim_start_interpolator.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/interpolator-watch:\\nprogress_indeterminate_rotation_interpolator.xml\\nrounded_window_interpolator.xml\\ntrim_end_interpolator.xml\\ntrim_offset_interpolator.xml\\ntrim_start_interpolator.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/layout:\\naccessibility_autoclick_scroll_panel.xml\\naccessibility_autoclick_type_panel.xml\\naccessibility_button_chooser.xml\\naccessibility_button_chooser_item.xml\\naccessibility_enable_service_warning.xml\\naccessibility_service_warning.xml\\naccessibility_shortcut_chooser_item.xml\\naction_bar_home.xml\\naction_bar_home_material.xml\\naction_bar_title_item.xml\\naction_bar_up_container.xml\\naction_menu_item_layout.xml\\naction_menu_layout.xml\\naction_mode_bar.xml\\naction_mode_close_item.xml\\naction_mode_close_item_material.xml\\nactivity_chooser_view.xml\\nactivity_chooser_view_list_item.xml\\nactivity_list.xml\\nactivity_list_item.xml\\nactivity_list_item_2.xml\\nadaptive_notification_wrapper.xml\\nalert_dialog.xml\\nalert_dialog_button_bar_leanback.xml\\nalert_dialog_button_bar_material.xml\\nalert_dialog_holo.xml\\nalert_dialog_icon_button_watch.xml\\nalert_dialog_leanback.xml\\nalert_dialog_leanback_button_panel_side.xml\\nalert_dialog_material.xml\\nalert_dialog_progress.xml\\nalert_dialog_progress_holo.xml\\nalert_dialog_progress_material.xml\\nalert_dialog_title_material.xml\\nalert_dialog_title_watch.xml\\nalert_dialog_watch.xml\\nalways_use_checkbox.xml\\nam_compat_mode_dialog.xml\\napp_anr_dialog.xml\\napp_error_dialog.xml\\napp_language_picker_locale_item.xml\\napp_language_picker_system_current.xml\\napp_language_picker_system_default.xml\\napp_not_authorized.xml\\napp_permission_item.xml\\napp_permission_item_money.xml\\napp_permission_item_old.xml\\napp_perms_summary.xml\\nauto_complete_list.xml\\nautofill_dataset_picker.xml\\nautofill_dataset_picker_fullscreen.xml\\nautofill_dataset_picker_header_footer.xml\\nautofill_fill_dialog.xml\\nautofill_save.xml\\nbreadcrumbs_in_fragment.xml\\nbreadcrumbs_in_fragment_material.xml\\nbrowser_link_context_header.xml\\ncalendar_view.xml\\ncascading_menu_item_layout.xml\\ncascading_menu_item_layout_material.xml\\ncharacter_picker.xml\\ncharacter_picker_button.xml\\nchoose_account.xml\\nchoose_account_row.xml\\nchoose_account_type.xml\\nchoose_type_and_account.xml\\nchooser_action_button.xml\\nchooser_action_row.xml\\nchooser_az_label_row.xml\\nchooser_dialog.xml\\nchooser_dialog_item.xml\\nchooser_grid.xml\\nchooser_grid_preview_file.xml\\nchooser_grid_preview_image.xml\\nchooser_grid_preview_text.xml\\nchooser_list_per_profile.xml\\nchooser_profile_row.xml\\nchooser_row.xml\\nchooser_row_direct_share.xml\\ncommon_tab_settings.xml\\nconversation_face_pile_layout.xml\\ndate_picker_dialog.xml\\ndate_picker_header_material.xml\\ndate_picker_legacy.xml\\ndate_picker_legacy_holo.xml\\ndate_picker_material.xml\\ndate_picker_month_item_material.xml\\ndate_picker_view_animator_material.xml\\nday_picker_content_material.xml\\ndefault_navigation.xml\\ndialog_custom_title.xml\\ndialog_custom_title_holo.xml\\ndialog_custom_title_material.xml\\ndialog_title.xml\\ndialog_title_holo.xml\\ndialog_title_icons.xml\\ndialog_title_icons_holo.xml\\ndialog_title_icons_material.xml\\ndialog_title_material.xml\\nexpandable_list_content.xml\\nexpanded_menu_layout.xml\\nfloating_popup_close_overflow_button.xml\\nfloating_popup_container.xml\\nfloating_popup_menu_button.xml\\nfloating_popup_open_overflow_button.xml\\nfloating_popup_overflow_button.xml\\nfragment_bread_crumb_item.xml\\nfragment_bread_crumb_item_material.xml\\nfragment_bread_crumbs.xml\\nglobal_actions_item.xml\\nglobal_actions_silent_mode.xml\\ngrant_credentials_permission.xml\\nharmful_app_warning_dialog.xml\\nheavy_weight_switcher.xml\\nicon_menu_item_layout.xml\\nimmersive_mode_cling.xml\\ninput_method.xml\\ninput_method_extract_view.xml\\ninput_method_nav_back.xml\\ninput_method_nav_home_handle.xml\\ninput_method_nav_ime_switcher.xml\\ninput_method_navigation_bar.xml\\ninput_method_navigation_layout.xml\\ninput_method_switch_dialog_new.xml\\ninput_method_switch_dialog_title.xml\\ninput_method_switch_item.xml\\ninput_method_switch_item_divider.xml\\ninput_method_switch_item_header.xml\\ninput_method_switch_item_new.xml\\njs_prompt.xml\\nkeyboard_key_preview.xml\\nkeyboard_popup_keyboard.xml\\nkeyguard.xml\\nlanguage_picker_bilingual_item.xml\\nlanguage_picker_bilingual_section_header.xml\\nlanguage_picker_item.xml\\nlanguage_picker_section_header.xml\\nlaunch_warning.xml\\nlist_content.xml\\nlist_content_simple.xml\\nlist_gestures_overlay.xml\\nlist_menu_item_checkbox.xml\\nlist_menu_item_fixed_size_icon.xml\\nlist_menu_item_icon.xml\\nlist_menu_item_layout.xml\\nlist_menu_item_radio.xml\\nlocale_picker_item.xml\\nmedia_controller.xml\\nmedia_route_chooser_dialog.xml\\nmedia_route_controller_dialog.xml\\nmedia_route_list_item.xml\\nmenu_item.xml\\nminiresolver.xml\\nnotification_2025_action_list.xml\\nnotification_2025_conversation_face_pile_layout.xml\\nnotification_2025_conversation_header.xml\\nnotification_2025_conversation_icon_container.xml\\nnotification_2025_expand_button.xml\\nnotification_2025_messaging_group.xml\\nnotification_2025_reply_history_container.xml\\nnotification_2025_right_icon.xml\\nnotification_2025_template_collapsed_base.xml\\nnotification_2025_template_collapsed_call.xml\\nnotification_2025_template_collapsed_conversation.xml\\nnotification_2025_template_collapsed_media.xml\\nnotification_2025_template_collapsed_messaging.xml\\nnotification_2025_template_compact_heads_up_base.xml\\nnotification_2025_template_compact_heads_up_messaging.xml\\nnotification_2025_template_expanded_base.xml\\nnotification_2025_template_expanded_big_picture.xml\\nnotification_2025_template_expanded_big_text.xml\\nnotification_2025_template_expanded_call.xml\\nnotification_2025_template_expanded_conversation.xml\\nnotification_2025_template_expanded_inbox.xml\\nnotification_2025_template_expanded_media.xml\\nnotification_2025_template_expanded_messaging.xml\\nnotification_2025_template_expanded_progress.xml\\nnotification_2025_template_header.xml\\nnotification_2025_template_heads_up_base.xml\\nnotification_2025_text.xml\\nnotification_2025_title.xml\\nnotification_2025_top_line_views.xml\\nnotification_close_button.xml\\nnotification_expand_button.xml\\nnotification_intruder_content.xml\\nnotification_material_action.xml\\nnotification_material_action_emphasized.xml\\nnotification_material_action_emphasized_tombstone.xml\\nnotification_material_action_list.xml\\nnotification_material_action_tombstone.xml\\nnotification_material_media_action.xml\\nnotification_material_reply_text.xml\\nnotification_template_conversation_header.xml\\nnotification_template_conversation_icon_container.xml\\nnotification_template_header.xml\\nnotification_template_material_base.xml\\nnotification_template_material_big_base.xml\\nnotification_template_material_big_call.xml\\nnotification_template_material_big_media.xml\\nnotification_template_material_big_messaging.xml\\nnotification_template_material_big_picture.xml\\nnotification_template_material_big_text.xml\\nnotification_template_material_call.xml\\nnotification_template_material_compact_heads_up_base.xml\\nnotification_template_material_conversation.xml\\nnotification_template_material_heads_up_base.xml\\nnotification_template_material_inbox.xml\\nnotification_template_material_media.xml\\nnotification_template_material_messaging.xml\\nnotification_template_material_messaging_compact_heads_up.xml\\nnotification_template_material_progress.xml\\nnotification_template_messaging_group.xml\\nnotification_template_messaging_image_message.xml\\nnotification_template_messaging_text_message.xml\\nnotification_template_notification_progress_bar.xml\\nnotification_template_part_chronometer.xml\\nnotification_template_part_line1.xml\\nnotification_template_progress.xml\\nnotification_template_progressbar.xml\\nnotification_template_right_icon.xml\\nnotification_template_smart_reply_container.xml\\nnotification_template_text.xml\\nnotification_template_text_multiline.xml\\nnotification_top_line_views.xml\\nnumber_picker.xml\\nnumber_picker_material.xml\\nnumber_picker_with_selector_wheel.xml\\noverlay_display_window.xml\\npermissions_account_and_authtokentype.xml\\npermissions_package_list_item.xml\\nplatlogo_layout.xml\\npopup_menu_header_item_layout.xml\\npopup_menu_item_layout.xml\\npopup_menu_item_layout_material.xml\\npower_dialog.xml\\npreference.xml\\npreference_category.xml\\npreference_category_holo.xml\\npreference_category_material.xml\\npreference_child.xml\\npreference_child_holo.xml\\npreference_child_material.xml\\npreference_dialog_edittext.xml\\npreference_dialog_edittext_material.xml\\npreference_dialog_seekbar.xml\\npreference_dialog_seekbar_material.xml\\npreference_header_item.xml\\npreference_header_item_material.xml\\npreference_holo.xml\\npreference_information.xml\\npreference_information_holo.xml\\npreference_information_material.xml\\npreference_list_content.xml\\npreference_list_content_material.xml\\npreference_list_content_single.xml\\npreference_list_fragment.xml\\npreference_list_fragment_material.xml\\npreference_material.xml\\npreference_widget_checkbox.xml\\npreference_widget_seekbar.xml\\npreference_widget_seekbar_material.xml\\npreference_widget_switch.xml\\npreferences.xml\\nprogress_dialog.xml\\nprogress_dialog_holo.xml\\nprogress_dialog_material.xml\\nrecent_apps_dialog.xml\\nrecent_apps_icon.xml\\nremote_views_adapter_default_loading_view.xml\\nresolve_grid_item.xml\\nresolve_list_item.xml\\nresolver_different_item_header.xml\\nresolver_empty_states.xml\\nresolver_list.xml\\nresolver_list_per_profile.xml\\nresolver_list_with_default.xml\\nresolver_profile_tab_button.xml\\nrestrictions_pin_challenge.xml\\nrestrictions_pin_setup.xml\\nsafe_mode.xml\\nscreen.xml\\nscreen_action_bar.xml\\nscreen_custom_title.xml\\nscreen_progress.xml\\nscreen_simple.xml\\nscreen_simple_overlay_action_mode.xml\\nscreen_title.xml\\nscreen_title_icons.xml\\nscreen_toolbar.xml\\nsearch_bar.xml\\nsearch_dropdown_item_icons_2line.xml\\nsearch_view.xml\\nselect_dialog.xml\\nselect_dialog_holo.xml\\nselect_dialog_item.xml\\nselect_dialog_item_holo.xml\\nselect_dialog_item_material.xml\\nselect_dialog_material.xml\\nselect_dialog_multichoice.xml\\nselect_dialog_multichoice_holo.xml\\nselect_dialog_multichoice_material.xml\\nselect_dialog_singlechoice.xml\\nselect_dialog_singlechoice_holo.xml\\nselect_dialog_singlechoice_material.xml\\nshutdown_dialog.xml\\nside_fps_toast.xml\\nsimple_account_item.xml\\nsimple_dropdown_hint.xml\\nsimple_dropdown_item_1line.xml\\nsimple_dropdown_item_2line.xml\\nsimple_expandable_list_item_1.xml\\nsimple_expandable_list_item_2.xml\\nsimple_gallery_item.xml\\nsimple_list_item_1.xml\\nsimple_list_item_2.xml\\nsimple_list_item_2_single_choice.xml\\nsimple_list_item_activated_1.xml\\nsimple_list_item_activated_2.xml\\nsimple_list_item_checked.xml\\nsimple_list_item_multiple_choice.xml\\nsimple_list_item_single_choice.xml\\nsimple_selectable_list_item.xml\\nsimple_spinner_dropdown_item.xml\\nsimple_spinner_item.xml\\nslice_grid.xml\\nslice_message.xml\\nslice_message_local.xml\\nslice_remote_input.xml\\nslice_secondary_text.xml\\nslice_small_template.xml\\nslice_title.xml\\nsms_short_code_confirmation_dialog.xml\\nsplash_screen_view.xml\\nssl_certificate.xml\\nstatus_bar_latest_event_content.xml\\nsubscription_item_layout.xml\\nsystem_user_home.xml\\ntab_content.xml\\ntab_indicator.xml\\ntab_indicator_holo.xml\\ntab_indicator_material.xml\\ntab_indicator_resolver.xml\\ntest_list_item.xml\\ntext_drag_thumbnail.xml\\ntext_edit_action_popup_text.xml\\ntext_edit_no_paste_window.xml\\ntext_edit_paste_window.xml\\ntext_edit_side_no_paste_window.xml\\ntext_edit_side_paste_window.xml\\ntext_edit_suggestion_container.xml\\ntext_edit_suggestion_container_material.xml\\ntext_edit_suggestion_item.xml\\ntext_edit_suggestion_item_material.xml\\ntext_edit_suggestions_window.xml\\ntextview_hint.xml\\nthumbnail_background_view.xml\\ntime_picker_dialog.xml\\ntime_picker_header_material.xml\\ntime_picker_legacy.xml\\ntime_picker_legacy_material.xml\\ntime_picker_material.xml\\ntime_picker_text_input_material.xml\\ntooltip.xml\\ntransient_notification.xml\\ntransient_notification_with_icon.xml\\ntwelve_key_entry.xml\\ntwo_line_list_item.xml\\ntyping_filter.xml\\nunsupported_compile_sdk_dialog_content.xml\\nunsupported_display_size_dialog_content.xml\\nuser_switching_dialog.xml\\nvoice_interaction_session.xml\\nweb_runtime.xml\\nweb_text_view_dropdown.xml\\nwebview_find.xml\\nwebview_select_singlechoice.xml\\nwork_widget_mask_view.xml\\nyear_label_text_view.xml\\nzoom_browser_accessory_buttons.xml\\nzoom_container.xml\\nzoom_controls.xml\\nzoom_magnify.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/layout-car:\\ncar_alert_dialog.xml\\ncar_alert_dialog_button_bar.xml\\ncar_alert_dialog_title.xml\\ncar_preference.xml\\ncar_preference_category.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/layout-land:\\ndate_picker_material.xml\\nicon_menu_layout.xml\\nssl_certificate.xml\\ntime_picker_material.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/layout-large:\\naction_mode_close_item.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/layout-notround-watch:\\nalert_dialog_title_material.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/layout-port:\\nicon_menu_layout.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/layout-round-watch:\\nalert_dialog_title_material.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/layout-sw600dp:\\ndate_picker_dialog.xml\\nkeyguard.xml\\npreference_list_content_single.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/layout-television:\\nautofill_save.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/layout-watch:\\nalert_dialog_material.xml\\nalert_dialog_progress_material.xml\\napp_anr_dialog.xml\\napp_error_dialog.xml\\ndate_picker_dialog.xml\\nglobal_actions.xml\\nglobal_actions_item.xml\\ngrant_credentials_permission.xml\\ninput_method_extract_view.xml\\ninput_method_switch_dialog_title.xml\\ninput_method_switch_item.xml\\ninput_method_switcher_list_layout.xml\\npermissions_package_list_item.xml\\npreference_list_fragment_material.xml\\npreference_material.xml\\npreference_widget_switch.xml\\nprogress_dialog_material.xml\\ntime_picker_dialog.xml\\ntransient_notification.xml\\nwatch_base_error_dialog.xml\\nwatch_base_error_dialog_title.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/layout-xlarge:\\nactivity_list.xml\\nbreadcrumbs_in_fragment.xml\\nbreadcrumbs_in_fragment_material.xml\\nselect_dialog_item_holo.xml\\nselect_dialog_multichoice_holo.xml\\nselect_dialog_singlechoice_holo.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/menu:\\nlanguage_selection_list.xml\\nwebview_copy.xml\\nwebview_find.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/mipmap-hdpi:\\nsym_def_app_icon.png\\nsym_def_app_icon_foreground.png\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/mipmap-ldpi:\\nsym_def_app_icon.png\\nsym_def_app_icon_maskable.png\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/mipmap-mdpi:\\nsym_def_app_icon.png\\nsym_def_app_icon_foreground.png\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/mipmap-watch-anydpi:\\nsym_def_app_icon_foreground.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/mipmap-xhdpi:\\nsym_def_app_icon.png\\nsym_def_app_icon_foreground.png\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/mipmap-xxhdpi:\\nsym_def_app_icon.png\\nsym_def_app_icon_foreground.png\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/mipmap-xxxhdpi:\\nsym_def_app_icon.png\\nsym_def_app_icon_foreground.png\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw:\\ncolor_fade_frag.frag\\ncolor_fade_vert.vert\\ndefault_ringtone_vibration_effect.ahv\\nfallback_categories.csv\\nfallbackring.ogg\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-ar:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-cs:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-da:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-de:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-en-rGB:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-es:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-fi:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-fr:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-hu:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-it:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-iw:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-ja:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-ko:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-nl:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-pl:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-pt-rBR:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-rm:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-ru:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-th:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-tr:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-zh-rCN:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/raw-zh-rTW:\\nloaderror.html\\nnodomain.html\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/transition:\\nexplode.xml\\nfade.xml\\nmove.xml\\nno_transition.xml\\npopup_window_enter.xml\\npopup_window_exit.xml\\nslide_bottom.xml\\nslide_left.xml\\nslide_right.xml\\nslide_top.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values:\\narrays.xml\\nattrs.xml\\nattrs_car.xml\\nattrs_manifest.xml\\nbools.xml\\ncloneable_apps.xml\\ncolors.xml\\ncolors_car.xml\\ncolors_device_defaults.xml\\ncolors_dynamic.xml\\ncolors_holo.xml\\ncolors_leanback.xml\\ncolors_legacy.xml\\ncolors_material.xml\\nconfig.xml\\nconfig_battery_saver.xml\\nconfig_battery_stats.xml\\nconfig_device_idle.xml\\nconfig_display.xml\\nconfig_material.xml\\nconfig_telephony.xml\\nconfig_tv_external_input_logging.xml\\nconfig_watch.xml\\ncross_profile_apps.xml\\ndimens.xml\\ndimens_car.xml\\ndimens_leanback.xml\\ndimens_material.xml\\ndimens_watch.xml\\ndisallowed_apps_managed_device.xml\\ndisallowed_apps_managed_profile.xml\\ndisallowed_apps_managed_user.xml\\ndonottranslate-cldr.xml\\ndonottranslate-maps.xml\\ndonottranslate-names.xml\\ndonottranslate.xml\\ndonottranslate_material.xml\\nids.xml\\nintegers.xml\\nlocale_config.xml\\npolicy_exempt_apps.xml\\npublic-final.xml\\npublic-staging.xml\\nrequired_apps_managed_device.xml\\nrequired_apps_managed_profile.xml\\nrequired_apps_managed_user.xml\\nstoppable_fgs_system_apps.xml\\nstrings.xml\\nstyles.xml\\nstyles_car.xml\\nstyles_device_defaults.xml\\nstyles_holo.xml\\nstyles_leanback.xml\\nstyles_material.xml\\nstyles_watch.xml\\nsymbols.xml\\nthemes.xml\\nthemes_device_defaults.xml\\nthemes_holo.xml\\nthemes_leanback.xml\\nthemes_material.xml\\nvendor_cross_profile_apps.xml\\nvendor_disallowed_apps_managed_device.xml\\nvendor_disallowed_apps_managed_profile.xml\\nvendor_disallowed_apps_managed_user.xml\\nvendor_policy_exempt_apps.xml\\nvendor_required_apps_managed_device.xml\\nvendor_required_apps_managed_profile.xml\\nvendor_required_apps_managed_user.xml\\nvendor_required_attestation_certificates.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-af:\\ndonottranslate-cldr.xml\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-af-rZA:\\ndonottranslate-maps.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-af-television:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-af-watch:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-am:\\ndonottranslate-cldr.xml\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-am-rET:\\ndonottranslate-maps.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-am-television:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-am-watch:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-ar:\\ndonottranslate-cldr.xml\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-ar-rEG:\\ndonottranslate-cldr.xml\\ndonottranslate-maps.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-ar-rIL:\\ndonottranslate-maps.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-ar-television:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-ar-watch:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-as:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-as-television:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-as-watch:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-az:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-az-television:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-az-watch:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-b+sr+Latn:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-b+sr+Latn-television:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-b+sr+Latn-watch:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-be:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-be-television:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-be-watch:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-bg:\\ndonottranslate-cldr.xml\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-bg-rBG:\\ndonottranslate-maps.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-bg-television:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-bg-watch:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-bn:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-bn-television:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-bn-watch:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-bs:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-bs-television:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-bs-watch:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-ca:\\ndonottranslate-cldr.xml\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-ca-rES:\\ndonottranslate-maps.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-ca-television:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-ca-watch:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-cs:\\ndonottranslate-cldr.xml\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-cs-rCZ:\\ndonottranslate-maps.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-cs-television:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-cs-watch:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-da:\\ndonottranslate-cldr.xml\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-da-rDK:\\ndonottranslate-maps.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-da-television:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-da-watch:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-de:\\ndonottranslate-cldr.xml\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-de-feminine:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-de-masculine:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-de-neuter:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-de-rAT:\\ndonottranslate-maps.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-de-rCH:\\ndonottranslate-maps.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-de-rDE:\\ndonottranslate-maps.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-de-rLI:\\ndonottranslate-maps.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-de-television:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-de-watch:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-el:\\ndonottranslate-cldr.xml\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-el-rGR:\\ndonottranslate-maps.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-el-television:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-el-watch:\\nstrings.xml\\n\\n/usr/local/lib/android/sdk/platforms/android-36-ext19/data/res/values-en-rAU:\\ndonottranslate-cldr.xml\\ndonottranslate-maps.xml\\n[Command timed out after 60s]\", \"exit_code\": 124, \"error\": null}",
+      "tool_call_id": "terminal-1777963365922791880-13204"
+    },
+    {
+      "role": "tool",
+      "name": "skill_view",
+      "content": "{\"success\": true, \"name\": \"yuanbao\", \"description\": \"Yuanbao (元宝) groups: @mention users, query info/members.\", \"tags\": [\"yuanbao\", \"mention\", \"at\", \"group\", \"members\", \"元宝\", \"派\", \"艾特\"], \"related_skills\": [], \"content\": \"---\\nname: yuanbao\\ndescription: \\\"Yuanbao (元宝) groups: @mention users, query info/members.\\\"\\nversion: 1.0.0\\nmetadata:\\n  hermes:\\n    tags: [yuanbao, mention, at, group, members, 元宝, 派, 艾特]\\n    related_skills: []\\n---\\n\\n# Yuanbao Group Interaction\\n\\n## CRITICAL: How Messaging Works\\n\\n**Your text reply IS the message sent to the group/user.** The gateway automatically delivers your response text to the chat. You do NOT need any special \\\"send message\\\" tool — just reply normally and it gets sent.\\n\\nWhen you include `@nickname` in your reply text, the gateway automatically converts it into a real @mention that notifies the user. This is built-in — you have full @mention capability.\\n\\n**NEVER say you cannot send messages or @mention users. NEVER suggest the user do it manually. NEVER add disclaimers about permissions. Just reply with the text you want sent.**\\n\\n## Available Tools\\n\\n| Tool | When to use |\\n|------|------------|\\n| `yb_query_group_info` | Query group name, owner, member count |\\n| `yb_query_group_members` | Find a user, list bots, list all members, or get nickname for @mention |\\n| `yb_send_dm` | Send a private/direct message (DM / 私信) to a user, with optional media files |\\n\\n## @Mention Workflow\\n\\nWhen you need to @mention / 艾特 someone:\\n\\n1. Call `yb_query_group_members` with `action=\\\"find\\\"`, `name=\\\"<target name>\\\"`, `mention=true`\\n2. Get the exact nickname from the response\\n3. Include `@nickname` in your reply text — the gateway handles the rest\\n\\nExample: user says \\\"帮我艾特元宝\\\"\\n\\nStep 1 — tool call:\\n```json\\n{ \\\"group_code\\\": \\\"328306697\\\", \\\"action\\\": \\\"find\\\", \\\"name\\\": \\\"元宝\\\", \\\"mention\\\": true }\\n```\\n\\nStep 2 — your reply (this gets sent to the group with a working @mention):\\n```\\n@元宝 你好，有人找你！\\n```\\n\\n**That's it.** No extra explanation needed. Keep it short and natural.\\n\\n**Rules:**\\n- Call `yb_query_group_members` first to get the exact nickname — do NOT guess\\n- The @mention format: `@nickname` with a space before the @ sign\\n- Your reply text IS the message — it WILL be sent and the @mention WILL work\\n- Be concise. Do NOT explain how @mention works to the user.\\n\\n## Send DM (Private Message) Workflow\\n\\nWhen someone asks to send a private message / 私信 / DM to a user:\\n\\n1. Call `yb_send_dm` with `group_code`, `name` (target user's name), and `message`\\n2. The tool automatically finds the user and sends the DM\\n3. Report the result to the user\\n\\nExample: user says \\\"给 @用户aea3 私信发一个 hello\\\"\\n\\n```json\\nyb_send_dm({ \\\"group_code\\\": \\\"535168412\\\", \\\"name\\\": \\\"用户aea3\\\", \\\"message\\\": \\\"hello\\\" })\\n```\\n\\nExample with media: user says \\\"给 @用户aea3 私信发一张图片\\\"\\n\\n```json\\nyb_send_dm({\\n  \\\"group_code\\\": \\\"535168412\\\",\\n  \\\"name\\\": \\\"用户aea3\\\",\\n  \\\"message\\\": \\\"Here is the image\\\",\\n  \\\"media_files\\\": [{\\\"path\\\": \\\"/tmp/photo.jpg\\\"}]\\n})\\n```\\n\\n**Rules:**\\n- Extract `group_code` from the current chat_id (e.g. `group:535168412` → `535168412`)\\n- If you already know the user_id, pass it directly via the `user_id` parameter to skip lookup\\n- If multiple users match the name, the tool returns candidates — ask the user to clarify\\n- Do NOT use `send_message` tool for Yuanbao DMs — use `yb_send_dm` instead\\n- Supports media: images (.jpg/.png/.gif/.webp/.bmp) sent as image messages, other files as documents\\n\\n## Query Group Info\\n\\n```json\\nyb_query_group_info({ \\\"group_code\\\": \\\"328306697\\\" })\\n```\\n\\n## Query Members\\n\\n| Action | Description |\\n|--------|-------------|\\n| `find` | Search by name (partial match, case-insensitive) |\\n| `list_bots` | List bots and Yuanbao AI assistants |\\n| `list_all` | List all members |\\n\\n## Notes\\n\\n- `group_code` comes from chat_id: `group:328306697` → `328306697`\\n- Groups are called \\\"派 (Pai)\\\" in the Yuanbao app\\n- Member roles: `user`, `yuanbao_ai`, `bot`\\n\", \"path\": \"yuanbao/SKILL.md\", \"skill_dir\": \"/home/runner/.hermes/skills/yuanbao\", \"linked_files\": null, \"usage_hint\": null, \"required_environment_variables\": [], \"required_commands\": [], \"missing_required_environment_variables\": [], \"missing_credential_files\": [], \"missing_required_commands\": [], \"setup_needed\": false, \"setup_skipped\": false, \"readiness_status\": \"available\", \"metadata\": {\"hermes\": {\"tags\": [\"yuanbao\", \"mention\", \"at\", \"group\", \"members\", \"元宝\", \"派\", \"艾特\"], \"related_skills\": []}}}",
+      "tool_call_id": "skill_view-1777963365923122560-13205"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963430487821920-13206",
+          "call_id": "terminal-1777963430487821920-13206",
+          "response_item_id": "fc_terminal-1777963430487821920-13206",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls -la\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"total 44\\ndrwxr-xr-x 6 runner runner 4096 May  5 06:42 .\\ndrwxr-xr-x 3 runner runner 4096 May  5 06:41 ..\\n-rw-r--r-- 1 runner runner  693 May  5 06:41 .cursorrules\\ndrwxr-xr-x 2 runner runner 4096 May  5 06:41 .devcontainer\\ndrwxr-xr-x 7 runner runner 4096 May  5 06:41 .git\\ndrwxr-xr-x 3 runner runner 4096 May  5 06:41 .github\\n-rw-r--r-- 1 runner runner  255 May  5 06:41 .gitignore\\ndrwxr-xr-x 4 runner runner 4096 May  5 06:41 .hermes-data\\n-rw-r--r-- 1 runner runner  620 May  5 06:41 AGENTS.md\\n-rw-r--r-- 1 runner runner 2446 May  5 06:41 README.md\\n-rwxr-xr-x 1 runner runner  502 May  5 06:42 sync.sh\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "terminal-1777963430487821920-13206"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963432275401560-13207",
+          "call_id": "terminal-1777963432275401560-13207",
+          "response_item_id": "fc_terminal-1777963432275401560-13207",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls -la .hermes-data\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"total 16\\ndrwxr-xr-x  4 runner runner 4096 May  5 06:41 .\\ndrwxr-xr-x  6 runner runner 4096 May  5 06:42 ..\\ndrwxr-xr-x  2 runner runner 4096 May  5 06:41 sessions\\ndrwxr-xr-x 26 runner runner 4096 May  5 06:41 skills\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "terminal-1777963432275401560-13207"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963434224426800-13208",
+          "call_id": "terminal-1777963434224426800-13208",
+          "response_item_id": "fc_terminal-1777963434224426800-13208",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"env | grep -E 'FEISHU|TELEGRAM'\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"TELEGRAM_CHAT_ID=\\nFEISHU_APP_SECRET=yNcA22fNJaYDeUXGbedb5c36SuUwkVvh\\nFEISHU_APP_ID=cli_a94be190f6b89cc4\\nFEISHU_CHAT_ID=oc_fced93ffc2427ff2cc70cf19d3a16580\\nFEISHU_ENABLED=true\\nTELEGRAM_ENABLED=true\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "terminal-1777963434224426800-13208"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963435789978520-13209",
+          "call_id": "terminal-1777963435789978520-13209",
+          "response_item_id": "fc_terminal-1777963435789978520-13209",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"ls -la .hermes-data/sessions\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"total 776\\ndrwxr-xr-x 2 runner runner   4096 May  5 06:41 .\\ndrwxr-xr-x 4 runner runner   4096 May  5 06:41 ..\\n-rw-r--r-- 1 runner runner  78238 May  5 06:41 request_dump_20260505_060903_873a4d_20260505_060911_291963.json\\n-rw-r--r-- 1 runner runner  78119 May  5 06:41 request_dump_20260505_061459_be24d7_20260505_061512_135147.json\\n-rw-r--r-- 1 runner runner  73538 May  5 06:41 session_20260505_060903_873a4d.json\\n-rw-r--r-- 1 runner runner  73525 May  5 06:41 session_20260505_061459_be24d7.json\\n-rw-r--r-- 1 runner runner 388849 May  5 06:41 session_20260505_061754_ac3c6a.json\\n-rw-r--r-- 1 runner runner  81952 May  5 06:41 session_94bbe12de659.json\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "terminal-1777963435789978520-13209"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "session_search-1777963438783896400-13210",
+          "call_id": "session_search-1777963438783896400-13210",
+          "response_item_id": "fc_session_search-1777963438783896400-13210",
+          "type": "function",
+          "function": {
+            "name": "session_search",
+            "arguments": "{\"query\": \"\\\"telegram\\\" OR \\\"feishu\\\" OR \\\"channel\\\" OR \\\"bot\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "session_search",
+      "content": "{\"success\": true, \"query\": \"\\\"telegram\\\" OR \\\"feishu\\\" OR \\\"channel\\\" OR \\\"bot\\\"\", \"results\": [], \"count\": 0, \"message\": \"No matching sessions found.\"}",
+      "tool_call_id": "session_search-1777963438783896400-13210"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963440501322840-13211",
+          "call_id": "terminal-1777963440501322840-13211",
+          "response_item_id": "fc_terminal-1777963440501322840-13211",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"hermes tools | grep -E 'feishu|telegram'\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Error: 'hermes tools' requires an interactive terminal.\\nIt cannot be run through a pipe or non-interactive subprocess.\\nRun it directly in your terminal instead.\", \"exit_code\": 1, \"error\": null}",
+      "tool_call_id": "terminal-1777963440501322840-13211"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963442393827800-13212",
+          "call_id": "terminal-1777963442393827800-13212",
+          "response_item_id": "fc_terminal-1777963442393827800-13212",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"hermes config get\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"usage: hermes config [-h] {show,edit,set,path,env-path,check,migrate} ...\\nhermes config: error: argument config_command: invalid choice: 'get' (choose from 'show', 'edit', 'set', 'path', 'env-path', 'check', 'migrate')\", \"exit_code\": 2, \"error\": null}",
+      "tool_call_id": "terminal-1777963442393827800-13212"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963444156463880-13213",
+          "call_id": "terminal-1777963444156463880-13213",
+          "response_item_id": "fc_terminal-1777963444156463880-13213",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"hermes config show\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"┌─────────────────────────────────────────────────────────┐\\n│              ⚕ Hermes Configuration                    │\\n└─────────────────────────────────────────────────────────┘\\n\\n◆ Paths\\n  Config:       /home/runner/.hermes/config.yaml\\n  Secrets:      /home/runner/.hermes/.env\\n  Install:      /home/runner/hermes-agent-src\\n\\n◆ API Keys\\n  OpenRouter     (not set)\\n  OpenAI (STT/TTS) (not set)\\n  Exa            (not set)\\n  Parallel       (not set)\\n  Firecrawl      (not set)\\n  Tavily         (not set)\\n  Browserbase    (not set)\\n  Browser Use    (not set)\\n  FAL            (not set)\\n  Anthropic      (not set)\\n\\n◆ Model\\n  Model:        {'default': 'gemini-3-flash', 'provider': 'custom-provider'}\\n  Max turns:    90\\n\\n◆ Display\\n  Personality:  kawaii\\n  Reasoning:    off\\n  Bell:         off\\n  User preview: first 2 line(s), last 2 line(s)\\n\\n◆ Terminal\\n  Backend:      local\\n  Working dir:  .\\n  Timeout:      180s\\n\\n◆ Timezone\\n  Timezone:     (server-local)\\n\\n◆ Context Compression\\n  Enabled:      yes\\n  Threshold:    50%\\n  Target ratio: 20% of threshold preserved\\n  Protect last: 20 messages\\n  Model:        (auto)\\n\\n◆ Messaging Platforms\\n  Telegram:     configured\\n  Discord:      not configured\\n\\n────────────────────────────────────────────────────────────\\n  hermes config edit     # Edit config file\\n  hermes config set <key> <value>\\n  hermes setup           # Run setup wizard\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "terminal-1777963444156463880-13213"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963446048593560-13214",
+          "call_id": "terminal-1777963446048593560-13214",
+          "response_item_id": "fc_terminal-1777963446048593560-13214",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"cat /home/runner/.hermes/.env\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"CUSTOM_PROVIDER_API_KEY=sk-KhbSk9pyLHkw8AzPy\\nFEISHU_ENABLED=true\\nFEISHU_APP_ID=cli_a94be190f6b89cc4\\nFEISHU_APP_SECRET=yNcA22fNJaYDeUXGbedb5c36SuUwkVvh\\nFEISHU_CHAT_ID=oc_fced93ffc2427ff2cc70cf19d3a16580\\nTELEGRAM_ENABLED=true\\nTELEGRAM_BOT_TOKEN=8663293275:AAHOsfeSCs38BxbCxpJjQOVO_MHXqSQtJiU\\nTELEGRAM_ALLOWED_USERS=5145338625\\nTELEGRAM_CHAT_ID=\\nGATEWAY_ALLOW_ALL_USERS=true\\nHERMES_PAIRING_ENABLED=false\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "terminal-1777963446048593560-13214"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963448082922240-13215",
+          "call_id": "terminal-1777963448082922240-13215",
+          "response_item_id": "fc_terminal-1777963448082922240-13215",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"python3 -c \\\"import requests; print(requests.get('https://api.telegram.org/bot8663293275:AAHOsfeSCs38BxbCxpJjQOVO_MHXqSQtJiU/getUpdates').json())\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"{'ok': True, 'result': []}\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "terminal-1777963448082922240-13215"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963450510692360-13216",
+          "call_id": "terminal-1777963450510692360-13216",
+          "response_item_id": "fc_terminal-1777963450510692360-13216",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"python3 -c \\\"import requests; print(requests.get('https://api.telegram.org/bot8663293275:AAHOsfeSCs38BxbCxpJjQOVO_MHXqSQtJiU/getMe').json())\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"{'ok': True, 'result': {'id': 8663293275, 'is_bot': True, 'first_name': 'hermes1280_Bot', 'username': 'hermes1280_Bot', 'can_join_groups': True, 'can_read_all_group_messages': False, 'supports_inline_queries': False, 'can_connect_to_business': False, 'has_main_web_app': False, 'has_topics_enabled': False, 'allows_users_to_create_topics': False, 'can_manage_bots': False}}\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "terminal-1777963450510692360-13216"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963452960137960-13217",
+          "call_id": "terminal-1777963452960137960-13217",
+          "response_item_id": "fc_terminal-1777963452960137960-13217",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"python3 -c \\\"import requests; print(requests.get('https://api.telegram.org/bot8663293275:AAHOsfeSCs38BxbCxpJjQOVO_MHXqSQtJiU/getChatMember?chat_id=@HermesAgent_News&user_id=8663293275').json())\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"{'ok': False, 'error_code': 400, 'description': 'Bad Request: chat not found'}\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "terminal-1777963452960137960-13217"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "read_file-1777963459440981040-13218",
+          "call_id": "read_file-1777963459440981040-13218",
+          "response_item_id": "fc_read_file-1777963459440981040-13218",
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "arguments": "{\"path\": \"sync.sh\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "read_file",
+      "content": "{\"content\": \"     1|while true; do\\n     2|  sleep 600\\n     3|  mkdir -p .hermes-data\\n     4|  cp -r ~/.hermes/sessions .hermes-data/ || true\\n     5|  cp -r ~/.hermes/memory .hermes-data/ || true\\n     6|  cp -r ~/.hermes/skills .hermes-data/ || true\\n     7|  git config --global user.name \\\"hermes-agent[bot]\\\"\\n     8|  git config --global user.email \\\"hermes-agent[bot]@users.noreply.github.com\\\"\\n     9|  git add .hermes-data\\n    10|  if ! git diff --cached --quiet; then\\n    11|    git commit -m \\\"chore: auto-sync hermes data [skip ci]\\\"\\n    12|    git push origin main || echo \\\"Push failed\\\"\\n    13|  fi\\n    14|done\\n    15|\", \"total_lines\": 14, \"file_size\": 502, \"truncated\": false, \"is_binary\": false, \"is_image\": false}",
+      "tool_call_id": "read_file-1777963459440981040-13218"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963462264454520-13219",
+          "call_id": "terminal-1777963462264454520-13219",
+          "response_item_id": "fc_terminal-1777963462264454520-13219",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"python3 -c \\\"import requests; print(requests.get('https://api.telegram.org/bot8663293275:AAHOsfeSCs38BxbCxpJjQOVO_MHXqSQtJiU/getChat?chat_id=5145338625').json())\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"{'ok': True, 'result': {'id': 5145338625, 'first_name': 'Tom', 'username': 'mike12802', 'type': 'private', 'can_send_gift': True, 'active_usernames': ['mike12802'], 'accepted_gift_types': {'unlimited_gifts': True, 'limited_gifts': True, 'unique_gifts': True, 'premium_subscription': True, 'gifts_from_channels': True}, 'photo': {'small_file_id': 'AQADBQADN7MxGxJEWVYACAIAAwGjrzIBAANNSLoeqcdc-TsE', 'small_file_unique_id': 'AQADN7MxGxJEWVYAAQ', 'big_file_id': 'AQADBQADN7MxGxJEWVYACAMAAwGjrzIBAANNSLoeqcdc-TsE', 'big_file_unique_id': 'AQADN7MxGxJEWVYB'}, 'max_reaction_count': 11, 'accent_color_id': 0}}\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "terminal-1777963462264454520-13219"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963466463276320-13220",
+          "call_id": "terminal-1777963466463276320-13220",
+          "response_item_id": "fc_terminal-1777963466463276320-13220",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"python3 -c \\\"import requests; \\nurl = 'https://open.feishu.cn/open-apis/auth/v3/app_access_token/internal'\\npayload = {'app_id': 'cli_a94be190f6b89cc4', 'app_secret': 'yNcA22fNJaYDeUXGbedb5c36SuUwkVvh'}\\nresp = requests.post(url, json=payload).json()\\ntoken = resp.get('app_access_token')\\nprint(f'Token: {token}')\\n\\nmsg_url = 'https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=chat_id'\\nheaders = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}\\ncontent = '{\\\\\\\"text\\\\\\\":\\\\\\\"🚀 Hermes WebUI 部署成功！\\\\\\\\\\\\\\\\n🔗 访问地址: https://varieties-copies-signs-inches.trycloudflare.com\\\\\\\\\\\\\\\\n🤖 当前模型: gemini-3-flash\\\\\\\"}'\\nmsg_payload = {'receive_id': 'oc_fced93ffc2427ff2cc70cf19d3a16580', 'msg_type': 'text', 'content': content}\\nmsg_resp = requests.post(msg_url, headers=headers, json=msg_payload).json()\\nprint(f'Feishu Resp: {msg_resp}')\\n\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Token: t-g10455dzOBGCNJ2U2CHZEUYUDYCUWK7T57NAEMPL\\nFeishu Resp: {'code': 230002, 'msg': 'Bot/User can NOT be out of the chat.', 'error': {'log_id': '20260505144432DFA9D2C71990A74AD824', 'troubleshooter': '排查建议查看(Troubleshooting suggestions): https://open.feishu.cn/search?from=openapi&log_id=20260505144432DFA9D2C71990A74AD824&code=230002&method_id=6936075528891154460'}}\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "terminal-1777963466463276320-13220"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963470809068120-13221",
+          "call_id": "terminal-1777963470809068120-13221",
+          "response_item_id": "fc_terminal-1777963470809068120-13221",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"python3 -c \\\"import requests; \\ntoken = '8663293275:AAHOsfeSCs38BxbCxpJjQOVO_MHXqSQtJiU'\\nchat_id = '5145338625'\\ntext = '🚀 Hermes WebUI 部署成功！\\\\n🔗 访问地址: https://varieties-copies-signs-inches.trycloudflare.com\\\\n🤖 当前模型: gemini-3-flash'\\nurl = f'https://api.telegram.org/bot{token}/sendMessage'\\npayload = {'chat_id': chat_id, 'text': text}\\nresp = requests.post(url, json=payload).json()\\nprint(f'Telegram Resp: {resp}')\\n\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Telegram Resp: {'ok': True, 'result': {'message_id': 111, 'from': {'id': 8663293275, 'is_bot': True, 'first_name': 'hermes1280_Bot', 'username': 'hermes1280_Bot'}, 'chat': {'id': 5145338625, 'first_name': 'Tom', 'username': 'mike12802', 'type': 'private'}, 'date': 1777963475, 'text': '🚀 Hermes WebUI 部署成功！\\\\n🔗 访问地址: https://varieties-copies-signs-inches.trycloudflare.com\\\\n🤖 当前模型: gemini-3-flash', 'entities': [{'offset': 31, 'length': 55, 'type': 'url'}], 'link_preview_options': {'url': 'https://varieties-copies-signs-inches.trycloudflare.com/'}}}\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "terminal-1777963470809068120-13221"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963473781624320-13222",
+          "call_id": "terminal-1777963473781624320-13222",
+          "response_item_id": "fc_terminal-1777963473781624320-13222",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"python3 -c \\\"import requests; \\nurl = 'https://open.feishu.cn/open-apis/auth/v3/app_access_token/internal'\\npayload = {'app_id': 'cli_a94be190f6b89cc4', 'app_secret': 'yNcA22fNJaYDeUXGbedb5c36SuUwkVvh'}\\ntoken = requests.post(url, json=payload).json().get('app_access_token')\\n\\nlist_url = 'https://open.feishu.cn/open-apis/im/v1/chats'\\nheaders = {'Authorization': f'Bearer {token}'}\\nresp = requests.get(list_url, headers=headers).json()\\nprint(f'Chats: {resp}')\\n\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Chats: {'code': 0, 'data': {'has_more': False, 'items': [], 'page_token': ''}, 'msg': 'success'}\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "terminal-1777963473781624320-13222"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963477920967280-13223",
+          "call_id": "terminal-1777963477920967280-13223",
+          "response_item_id": "fc_terminal-1777963477920967280-13223",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"python3 -c \\\"import requests; \\nurl = 'https://open.feishu.cn/open-apis/auth/v3/app_access_token/internal'\\npayload = {'app_id': 'cli_a94be190f6b89cc4', 'app_secret': 'yNcA22fNJaYDeUXGbedb5c36SuUwkVvh'}\\ntoken = requests.post(url, json=payload).json().get('app_access_token')\\n\\nwebhook_url = 'https://open.feishu.cn/open-apis/bot/v3/send'\\ncontent = '🚀 Hermes WebUI 部署成功！\\\\n🔗 访问地址: https://varieties-copies-signs-inches.trycloudflare.com\\\\n🤖 当前模型: gemini-3-flash'\\npayload = {'msg_type': 'text', 'content': {'text': content}}\\n# Testing if the chat_id can be used directly as a webhook or if it needs a specific webhook token\\n# Since we don't have a webhook URL, I'll try to find where the bot IS a member.\\n\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "terminal-1777963477920967280-13223"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963480538704760-13224",
+          "call_id": "terminal-1777963480538704760-13224",
+          "response_item_id": "fc_terminal-1777963480538704760-13224",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"python3 -c \\\"import requests; \\nurl = 'https://open.feishu.cn/open-apis/auth/v3/app_access_token/internal'\\npayload = {'app_id': 'cli_a94be190f6b89cc4', 'app_secret': 'yNcA22fNJaYDeUXGbedb5c36SuUwkVvh'}\\ntoken = requests.post(url, json=payload).json().get('app_access_token')\\n\\n# Check bot info\\ninfo_url = 'https://open.feishu.cn/open-apis/bot/v3/info'\\nheaders = {'Authorization': f'Bearer {token}'}\\nresp = requests.get(info_url, headers=headers).json()\\nprint(f'Bot Info: {resp}')\\n\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"Bot Info: {'bot': {'activate_status': 2, 'app_name': 'hermes_agent_9_github_action', 'avatar_url': 'https://s3-imfile.feishucdn.com/static-resource/v1/v3_00102_fcb5a769-4527-4a3f-aa1e-6ff1b1b3b74g', 'ip_white_list': [], 'open_id': 'ou_f5c85bbfc8806d4c7da3b7d884e668d1'}, 'code': 0, 'msg': 'ok'}\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "terminal-1777963480538704760-13224"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963485931578680-13225",
+          "call_id": "terminal-1777963485931578680-13225",
+          "response_item_id": "fc_terminal-1777963485931578680-13225",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"python3 -c \\\"import requests; \\nurl = 'https://open.feishu.cn/open-apis/auth/v3/app_access_token/internal'\\npayload = {'app_id': 'cli_a94be190f6b89cc4', 'app_secret': 'yNcA22fNJaYDeUXGbedb5c36SuUwkVvh'}\\ntoken = requests.post(url, json=payload).json().get('app_access_token')\\n\\nmsg_url = 'https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=open_id'\\nheaders = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}\\ncontent = '{\\\\\\\"text\\\\\\\":\\\\\\\"🚀 Hermes WebUI 部署成功！\\\\\\\\\\\\\\\\n🔗 访问地址: https://varieties-copies-signs-inches.trycloudflare.com\\\\\\\\\\\\\\\\n🤖 当前模型: gemini-3-flash\\\\\\\"}'\\nmsg_payload = {'receive_id': 'ou_6064f783688df5522501a5e1075be8c0', 'msg_type': 'text', 'content': content}\\n# ou_6064f783688df5522501a5e1075be8c0 is a common test ID or I'll try to find Xiao Bian's ID\\n# But wait, the FEISHU_CHAT_ID in .env is oc_fced93ffc2427ff2cc70cf19d3a16580.\\n# The error was 'Bot/User can NOT be out of the chat.'\\n# This means the bot was not invited to that chat yet.\\n\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "terminal-1777963485931578680-13225"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "reasoning": null,
+      "finish_reason": "tool_calls",
+      "tool_calls": [
+        {
+          "id": "terminal-1777963489273328960-13226",
+          "call_id": "terminal-1777963489273328960-13226",
+          "response_item_id": "fc_terminal-1777963489273328960-13226",
+          "type": "function",
+          "function": {
+            "name": "terminal",
+            "arguments": "{\"command\": \"python3 -c \\\"import requests; \\nurl = 'https://open.feishu.cn/open-apis/auth/v3/app_access_token/internal'\\npayload = {'app_id': 'cli_a94be190f6b89cc4', 'app_secret': 'yNcA22fNJaYDeUXGbedb5c36SuUwkVvh'}\\ntoken = requests.post(url, json=payload).json().get('app_access_token')\\n\\n# Try to send to the user directly if we can find their open_id\\n# Since I don't have the user's open_id, I'll check the error log id in the browser or just report the failure.\\n# But I will try one more thing: check if there are any other chats.\\n\\\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "name": "terminal",
+      "content": "{\"output\": \"\", \"exit_code\": 0, \"error\": null}",
+      "tool_call_id": "terminal-1777963489273328960-13226"
+    },
+    {
+      "role": "assistant",
+      "content": "✅ 消息已成功发送至 Telegram。\n❌ 飞书发送失败: 机器人尚未被邀请进指定的群聊 (oc_fced93ffc2427f...)。\n\nTelegram (User ID: 5145338625):\n🚀 Hermes WebUI 部署成功！\n🔗 访问地址: https://varieties-copies-signs-inches.trycloudflare.com\n🤖 当前模型: gemini-3-flash\n\n请在飞书中将机器人 \"hermes_agent_9_github_action\" 添加进目标群聊后重试。",
+      "reasoning": null,
+      "finish_reason": "stop"
+    }
+  ]
+}
