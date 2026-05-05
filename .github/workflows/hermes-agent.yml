@@ -34,7 +34,10 @@ jobs:
 
       - name: Install Hermes Agent
         run: |
-          curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
+          # 克隆源码安装以确保 sys.path 正确
+          git clone --depth 1 https://github.com/NousResearch/hermes-agent.git ~/hermes-agent-src
+          cd ~/hermes-agent-src
+          pip install -e .
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Restore Data from Repository
@@ -122,20 +125,21 @@ jobs:
       - name: Setup and Run Hermes WebUI
         if: github.event.inputs.run_webui == 'true'
         run: |
-          # Install WebUI
+          # 安装 WebUI
           git clone --depth 1 https://github.com/nesquena/hermes-webui ~/hermes-webui
           cd ~/hermes-webui
           pip install -r requirements.txt
           
-          # Install Cloudflared
+          # 安装 Cloudflared
           curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared.deb
           
-          # Start WebUI (Default port 8787)
+          # 启动 WebUI (确保 hermes-agent 在 sys.path 中)
           export HERMES_WEBUI_PORT=8787
+          export PYTHONPATH=$PYTHONPATH:~/hermes-agent-src
           python3 server.py &
           
-          # Start Cloudflare Tunnel (Pointing to 8787)
+          # 启动 Cloudflare Tunnel
           cloudflared tunnel --url http://localhost:8787 &
           sleep 15
 
@@ -144,7 +148,6 @@ jobs:
           if [ "${{ github.event.inputs.run_gateway }}" == "true" ]; then
             hermes gateway run
           elif [ "${{ github.event.inputs.run_webui }}" == "true" ]; then
-            # Keep alive for 6 hours
             echo "WebUI is running on port 8787. Action will remain active."
             sleep 21600
           elif [ "${{ github.event.inputs.query }}" != "" ]; then
