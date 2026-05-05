@@ -55,6 +55,9 @@ Before starting OAuth setup, ask the user TWO questions:
 **Question 1: "What Google services do you need? Just email, or also
 Calendar/Drive/Sheets/Docs?"**
 
+(Also consider if they are actually looking for **Feishu (飞书)** access if they mention it — in which case, use the `feishu-workspace` skill.)
+
+
 - **Email only** → They don't need this skill at all. Use the `himalaya` skill
   instead — it works with a Gmail App Password (Settings → Security → App
   Passwords) and takes 2 minutes to set up. No Google Cloud project needed.
