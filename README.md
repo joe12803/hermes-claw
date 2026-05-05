@@ -19,3 +19,28 @@
 ## 自动同步
 
 本项目通过 GitHub Actions 实现每 10 分钟一次的自动热备份，确保你的“数字灵魂”永不丢失。
+
+## 快速部署与配置
+
+### 1. 配置 Secrets
+在 GitHub 仓库的 **Settings > Secrets and variables > Actions** 中添加以下变量：
+
+| Secret 名称 | 说明 | 是否必填 |
+| :--- | :--- | :--- |
+| `CUSTOM_API_KEY` | OpenClaw 或其他 API Provider 的 Key | 是 |
+| `FEISHU_APP_ID` | 飞书应用的 App ID | 选填 (启用飞书必填) |
+| `FEISHU_APP_SECRET` | 飞书应用的 App Secret | 选填 (启用飞书必填) |
+| `TELEGRAM_BOT_TOKEN` | Telegram Bot 的 Token | 选填 (启用 TG 必填) |
+| `TELEGRAM_ALLOWED_USER` | 允许使用 Bot 的 TG 用户 ID | 选填 |
+
+### 2. 运行工作流
+1. 进入 **Actions** 页面。
+2. 选择 **Hermes Agent Runner**。
+3. 点击 **Run workflow**。
+   - **query**: 输入具体任务让 Agent 执行并退出。
+   - **run_gateway**: 勾选此项将启动网关模式（Feishu/Telegram），Agent 会持续在线等待指令。
+   - **run_webui**: 勾选此项将启动 WebUI 并通过 Cloudflare Tunnel 穿透。
+
+### 3. 常见问题
+- **No messaging platforms enabled**: 请检查 `FEISHU_APP_ID` 或 `TELEGRAM_BOT_TOKEN` 是否已在 Secrets 中正确设置。
+- **权限问题**: 确保在 **Settings > Actions > General > Workflow permissions** 中勾选了 `Read and write permissions`，否则自动同步功能会失败。
