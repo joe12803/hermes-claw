@@ -42,7 +42,41 @@ jobs:
           name: refined-ore-${{ github.event.inputs.project_name }}
           path: output/
 
-      - name: Notify Feishu (Optional)
+      - name: Notify Status
+        run: echo "Mining of ${{ github.event.inputs.project_name }} completed."
+      
+      - name: Send Notification via Hermes
+        if: success()
+        env:
+          FEISHU_APP_ID: ${{ secrets.FEISHU_APP_ID }}
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          FEISHU_CHAT_ID: ${{ secrets.FEISHU_CHAT_ID }}
+        run: |
+          # Simple python script to send Feishu message using Lark-OAPI or simple requests
+          python3 -c "
+          import requests, json, os
+          def send():
+              app_id = os.getenv('FEISHU_APP_ID')
+              app_secret = os.getenv('FEISHU_APP_SECRET')
+              chat_id = os.getenv('FEISHU_CHAT_ID')
+              if not all([app_id, app_secret, chat_id]): return
+              
+              # Get Tenant Access Token
+              res = requests.post('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal', 
+                                 json={'app_id': app_id, 'app_secret': app_secret})
+              token = res.json().get('tenant_access_token')
+              
+              # Send Message
+              msg = {
+                  'receive_id': chat_id,
+                  'msg_type': 'text',
+                  'content': json.dumps({'text': '⚒️ 工业化采矿完成！\n项目: ${{ github.event.inputs.project_name }}\n源: ${{ github.event.inputs.repo_url }}\n请到 GitHub Actions 下载提纯后的矿石包。'})
+              }
+              requests.post(f'https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=chat_id', 
+                           headers={'Authorization': f'Bearer {token}'}, json=msg)
+          send()
+          "
+
         if: success()
         run: |
           echo "Mining completed for ${{ github.event.inputs.project_name }}. Refined ore is ready in artifacts."
