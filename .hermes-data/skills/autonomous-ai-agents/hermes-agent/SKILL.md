@@ -343,6 +343,38 @@ $HERMES_HOME/skills/        Installed skills
 
 Profiles use `~/.hermes/profiles/<name>/` with the same layout.
 
+### Auto-Install Tool Configuration (`hermes-agent.yml`)
+
+The optional `~/.hermes/hermes-agent.yml` file records tools that should be installed on the system and optionally auto-installed on Hermes startup. It serves as a manifest of expected CLI tools and their installation commands.
+
+When `startup.auto_install` is `true`, the agent should, at the beginning of each session, iterate over `startup.tools`, run each `check` command (e.g., `which <tool>`), and if the check fails (exit code ≠ 0), execute the `install` command automatically.
+
+**File structure:**
+
+```yaml
+startup:
+  auto_install: true
+  tools:
+    - name: feishu-cli
+      check: "which feishu"
+      install: "npm install -g @fanfanv5/feishu-cli"
+    - name: rclone
+      check: "which rclone"
+      install: "sudo apt install -y rclone"
+
+tools:
+  # Per-tool metadata (version, capabilities, config files, notes)
+```
+
+**How it works:**
+1. On session start, the agent reads `hermes-agent.yml`.
+2. For each tool in `startup.tools`, runs the `check` command.
+3. If the tool is missing, runs the `install` command.
+4. Tools already present are skipped.
+5. Sudo commands will prompt for password; the agent should handle that.
+
+This ensures that after a system reset, migration, or clean environment, all expected tools are automatically reinstalled.
+
 ### Config Sections
 
 Edit with `hermes config edit` or `hermes config set section.key value`.

@@ -1,0 +1,24 @@
+# Hermes Agent — Tool Auto-Install Manifest
+# Place this file at ~/.hermes/hermes-agent.yml
+#
+# When startup.auto_install is true, the agent checks and installs
+# each tool listed below on every session start.
+#
+# Add new tools under startup.tools with a "check" command (which
+# returns non-zero when the tool is missing) and an "install" command.
+
+startup:
+  auto_install: true
+  tools:
+    # - name: example
+    #   check: "which example"
+    #   install: "sudo apt install -y example"
+
+tools:
+  # Per-tool metadata (version, capabilities, config, notes)
+  # example:
+  #   package: example
+  #   version: "1.0.0"
+  #   install:
+  #     method: apt
+  #     command: "sudo apt install -y example"
