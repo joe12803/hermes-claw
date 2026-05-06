@@ -51,3 +51,31 @@ token = requests.post(url, json=payload).json().get('app_access_token')
 - **Access Denied (Scope Required):** Feishu APIs are strict. If you get a `99991672` error, the bot is missing a specific scope. Provide the user with the authorization URL provided in the error message response so they can enable it in the Feishu Open Platform.
 - **Bot/User out of chat:** Error `230002` means the bot hasn't been invited to the group chat. Instruct the user to @mention the bot in the group or add it manually.
 - **receive_id_type:** Always specify the `receive_id_type` (e.g., `chat_id`, `open_id`, `email`) when sending or querying messages.
+
+## Document & Drive Operations (飞书文档/云盘)
+
+This skill does **not** directly handle document or drive operations. For those, delegate a subagent with the appropriate toolset:
+
+- **Documents (Doc, Sheet, Base):** `toolsets=['feishu_doc']` — create, read, edit, search, and manage online documents, spreadsheets, and multi-dimensional tables.
+- **Cloud Drive (Drive, Wiki):** `toolsets=['feishu_drive']` — file/folder management, permissions, sharing, versioning, and wiki node operations.
+
+For a detailed list of available operations, see [`references/feishu-doc-capabilities.md`](references/feishu-doc-capabilities.md).
+
+### Alternative: `lark-oapi` Python SDK
+
+The `lark-oapi` package (v1.6.0+) is installed in the environment. It provides programmatic access to all Lark/Feishu APIs including documents, drive, calendar, messages, and more. Use it when direct API calls are more appropriate than subagent delegation.
+
+Example:
+```python
+import os
+from lark_oapi import Client
+client = Client.builder() \
+    .app_id(os.environ['FEISHU_APP_ID']) \
+    .app_secret(os.environ['FEISHU_APP_SECRET']) \
+    .build()
+# Then use client.docs, client.drive, client.sheets, etc.
+```
+
+### CLI Tools
+
+No native `lark-cli` is installed by default. The npm package `@fanfanv5/feishu-cli` (v2.0.11) is available for installation if a dedicated CLI is needed.
