@@ -44,3 +44,12 @@
 ### 3. 常见问题
 - **No messaging platforms enabled**: 请检查 `FEISHU_APP_ID` 或 `TELEGRAM_BOT_TOKEN` 是否已在 Secrets 中正确设置。
 - **权限问题**: 确保在 **Settings > Actions > General > Workflow permissions** 中勾选了 `Read and write permissions`，否则自动同步功能会失败。
+
+## ⚒️ 工业化采矿 (Industrial Mining)
+你可以通过 GitHub Actions 启动一个全自动的采矿流程：
+1. 在 **Actions** 标签下选择 `Industrial Mining Workflow`。
+2. 点击 **Run workflow**。
+3. 输入目标 GitHub 仓库 URL 和项目名称。
+4. 流程结束后，在 Artifacts 中下载“提纯后的矿石包” (`.txt` 文件)，直接喂给 NotebookLM。
+
+此流程自动完成了：**Clone -> 脱模 (去杂质) -> 提炼 (去空行/注释) -> 切片 (适配 5MB 限制)**。

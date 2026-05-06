@@ -1,0 +1,48 @@
+name: Industrial Mining Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo_url:
+        description: 'GitHub Repository URL to mine'
+        required: true
+      project_name:
+        description: 'Target Project Name (prefix for chunks)'
+        required: true
+        default: 'mining_project'
+      notebook_id:
+        description: 'Optional: NotebookLM Notebook ID to add sources'
+        required: false
+
+jobs:
+  mine:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Clone Target Repository
+        run: |
+          git clone ${{ github.event.inputs.repo_url }} target_repo
+
+      - name: Drill and Refine (Industrial SOP)
+        run: |
+          python3 scripts/driller.py target_repo ${{ github.event.inputs.project_name }}
+          mkdir -p output/
+          mv ${{ github.event.inputs.project_name }}_part*.txt output/
+
+      - name: Upload Refined Ore to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: refined-ore-${{ github.event.inputs.project_name }}
+          path: output/
+
+      - name: Notify Feishu (Optional)
+        if: success()
+        run: |
+          echo "Mining completed for ${{ github.event.inputs.project_name }}. Refined ore is ready in artifacts."
