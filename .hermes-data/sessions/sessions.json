@@ -32,5 +32,38 @@
       "chat_topic": null,
       "user_id_alt": "on_df6bce2442ea908bd4922c1d544be7c2"
     }
+  },
+  "agent:main:telegram:dm:5145338625": {
+    "session_key": "agent:main:telegram:dm:5145338625",
+    "session_id": "20260506_173611_62ec23e2",
+    "created_at": "2026-05-06T17:36:11.579846",
+    "updated_at": "2026-05-06T17:40:05.286431",
+    "display_name": "Tom",
+    "platform": "telegram",
+    "chat_type": "dm",
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0,
+    "total_tokens": 0,
+    "last_prompt_tokens": 22833,
+    "estimated_cost_usd": 0.0,
+    "cost_status": "unknown",
+    "expiry_finalized": false,
+    "suspended": false,
+    "resume_pending": false,
+    "resume_reason": null,
+    "last_resume_marked_at": null,
+    "is_fresh_reset": false,
+    "origin": {
+      "platform": "telegram",
+      "chat_id": "5145338625",
+      "chat_name": "Tom",
+      "chat_type": "dm",
+      "user_id": "5145338625",
+      "user_name": "Tom",
+      "thread_id": null,
+      "chat_topic": null
+    }
   }
 }
