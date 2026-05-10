@@ -36,15 +36,31 @@ token = requests.post(url, json=payload).json().get('app_access_token')
 
 **Endpoint:** `GET https://open.feishu.cn/open-apis/calendar/v4/calendars/primary/events`
 
+**Parameters:**
+- `start_time`: Unix timestamp (string) of the start range.
+- `end_time`: Unix timestamp (string) of the end range.
+- `page_token`: For pagination.
+
 **Required Scopes:**
 - `calendar:calendar:readonly`
 - `calendar:calendar`
 - `calendar:calendar.event:read`
 
-### 3. Send/Read Messages
+**SDK Example (Lark OAPI):**
+```python
+from lark_oapi.api.calendar.v4 import *
+request = ListCalendarEventRequest.builder() \
+    .calendar_id("primary") \
+    .start_time("1622505600") \
+    .end_time("1622592000") \
+    .build()
+response = client.calendar.v4.calendar_event.list(request)
+```
 
-**Endpoint (Send):** `POST https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=chat_id`
-**Endpoint (Read):** `GET https://open.feishu.cn/open-apis/im/v1/messages?container_id_type=chat&container_id=<CHAT_ID>`
+## Pitfalls
+
+- **Access Denied (Scope Required):** Feishu APIs are strict. If you get a `99991672` error, the bot is missing a specific scope. The API response usually contains a `troubleshooter` URL and a specific authorization URL (look for `https://open.feishu.cn/app/.../auth?q=...`). **You MUST extract this URL and provide it to the user** so they can authorize the specific missing scopes with one click.
+
 
 ## Pitfalls
 

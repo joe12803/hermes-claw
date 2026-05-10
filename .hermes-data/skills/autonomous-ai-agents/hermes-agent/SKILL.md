@@ -732,6 +732,21 @@ User docs: https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban
 
 ---
 
+### Verifying & Setting Custom Models
+
+When adding or switching to a model on a custom provider, verify availability via the API before updating config to avoid invalid states:
+
+1.  **Find base_url**: Run `hermes config` or read `~/.hermes/config.yaml`.
+2.  **Get API Key**: Read `~/.hermes/.env` (usually `CUSTOM_PROVIDER_API_KEY` or similar).
+3.  **List models**:
+    ```bash
+    source ~/.hermes/.env && curl -s <BASE_URL>/models -H \"Authorization: Bearer $API_KEY\" | jq -r '.data[].id'
+    ```
+4.  **Set default**: `hermes config set model.default <model_id>`
+5.  **Restart**: Run `/restart` in the gateway or restart the CLI process for the change to take effect.
+
+---
+
 ## Troubleshooting
 
 ### Voice not working
